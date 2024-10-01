@@ -1,0 +1,37 @@
+{
+  "canisters": {
+    "internet_identity": {
+      "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
+      "frontend": {},
+      "remote": {
+        "id": {
+          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+        }
+      },
+      "type": "custom",
+      "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz"
+    },
+    "skillnet_backend": {
+      "main": "src/skillnet_backend/main.mo",
+      "type": "motoko"
+    },
+    "skillnet_frontend": {
+      "dependencies": [
+        "skillnet_backend"
+      ],
+      "source": [
+        "src/skillnet_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "skillnet_frontend"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
