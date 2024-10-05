@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { AuthClient } from '@dfinity/auth-client';
+import { useNavigate } from 'react-router-dom';
 
+// incorporated internet identity 
 const LoginPage = () => {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const navigate = useNavigate(); // Initialize navigate
 
   const handleLogin = async () => {
     setIsAuthenticating(true);
@@ -12,8 +15,7 @@ const LoginPage = () => {
         identityProvider: "https://identity.ic0.app",
         onSuccess: () => {
           console.log("Successfully logged in");
-          alert("success");
-          // Redirect to main app or update state
+          navigate('/landing'); // Use navigate to redirect
         },
       });
     } catch (error) {
