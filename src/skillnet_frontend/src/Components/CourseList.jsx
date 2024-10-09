@@ -69,4 +69,5 @@ const sampleCourses = [
       );
     }
     console.log("Sample courses");
-  
+  }
+  export default courselist;
