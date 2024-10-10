@@ -14,7 +14,7 @@ const UserProfile = ({ backendActor }) => {
     // setUserProfile(result);
   };
 
-  if (!userProfile) {
+  if (userProfile) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="text-xl font-semibold text-gray-700">Loading...</div>
@@ -38,24 +38,24 @@ const UserProfile = ({ backendActor }) => {
             </div>
             <div className="divide-y divide-gray-200 mt-6">
               <div className="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
-                <p><strong>Username:</strong> {userProfile.username}</p>
-                <p><strong>Level:</strong> {userProfile.level}</p>
-                <p><strong>XP:</strong> {userProfile.xp}</p>
-                <p><strong>Wallet Balance:</strong> {userProfile.tokenBalance} SKN</p>
+                <p><strong>Username:</strong> {userProfile}</p>
+                <p><strong>Level:</strong> {userProfile}</p>
+                <p><strong>XP:</strong> {userProfile}</p>
+                <p><strong>Wallet Balance:</strong> {userProfile} SKN</p>
                 <div>
                   <strong>Skills:</strong>
                   <ul className="list-disc pl-5 mt-2">
-                    {userProfile.skills.map((skill, index) => (
+                    {/* {userProfile.ap((skill, index) => (
                       <li key={index}>{skill}</li>
-                    ))}
+                    ))} */}
                   </ul>
                 </div>
                 <div>
                   <strong>Completed Courses:</strong>
                   <ul className="list-disc pl-5 mt-2">
-                    {userProfile.completedCourses.map((course, index) => (
+                    {/* {userProfile.completedCourses.map((course, index) => (
                       <li key={index}>{course}</li>
-                    ))}
+                    ))} */}
                   </ul>
                 </div>
               </div>
@@ -65,7 +65,7 @@ const UserProfile = ({ backendActor }) => {
                   <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
                     <motion.div 
                       initial={{ width: 0 }}
-                      animate={{ width: `${(userProfile.xp % 100) / 100 * 100}%` }}
+                      animate={{ width: `${(userProfile % 100) / 100 * 100}%` }}
                       transition={{ duration: 1 }}
                       className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"
                     />

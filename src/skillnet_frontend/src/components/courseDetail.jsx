@@ -1,44 +1,85 @@
 import React, { useState, useEffect } from 'react';
-import { getUser } from '../services/api';
-import { useAuth } from './AuthContext';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useUser } from './UserContext';
 
-function UserProfile() {
-  const [user, setUser] = useState(null);
-  const { isAuthenticated } = useAuth();
+const dummyCourses = [
+  // ... (keep the dummyCourses array as it was)
+];
+
+const courseCategories = [
+  // ... (keep the courseCategories array as it was)
+];
+
+function CourseDetail() {
+  const [course, setCourse] = useState(null);
+  const { userProfile, enrolledCourses, enrollInCourse } = useUser();
+  const { id } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    async function fetchUser() {
-      if (isAuthenticated) {
-        const userData = await getUser();
-        setUser(userData);
-      }
+    async function fetchCourse() {
+      // Simulating API call with dummy data
+      const courseData = dummyCourses.find(c => c.id === parseInt(id));
+      setCourse(courseData);
     }
-    fetchUser();
-  }, [isAuthenticated]);
+    fetchCourse();
+  }, [id]);
 
-  if (!isAuthenticated) return <div>Please log in to view your profile.</div>;
-  if (!user) return <div>Loading...</div>;
+  const handleEnroll = () => {
+    enrollInCourse(parseInt(id));
+  };
+
+  if (!course || !userProfile) return <div className="flex justify-center items-center h-screen">Loading...</div>;
+
+  const category = courseCategories.find(cat => cat.id === course.category);
+  const isEnrolled = enrolledCourses.includes(parseInt(id));
 
   return (
-    <div className="user-profile">
-      <h2>{user.username}'s Profile</h2>
-      <p>Level: {user.level}</p>
-      <p>Rank: {user.rank}</p>
-      <p>Tokens: {user.tokens}</p>
-      <h3>Skills</h3>
-      <ul>
-        {user.skills.map((skill, index) => (
-          <li key={index}>{skill}</li>
-        ))}
-      </ul>
-      <h3>Completed Courses</h3>
-      <ul>
-        {user.completedCourses.map((courseId) => (
-          <li key={courseId}>Course ID: {courseId}</li>
+    <div className="max-w-3xl mx-auto mt-8 p-6 bg-white shadow-lg rounded-lg">
+      <h2 className="text-3xl font-bold mb-4">{course.title}</h2>
+      <div className="flex items-center mb-4">
+        <span className="text-2xl mr-2">{category.icon}</span>
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          {category.name}
+        </span>
+      </div>
+      <p className="text-gray-600 mb-4">{course.description}</p>
+      <p className="text-lg font-semibold mb-4">Duration: {course.duration}</p>
+      
+      {isEnrolled ? (
+        <div>
+          <button 
+            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors mr-4"
+          >
+            Start Learning
+          </button>
+          <button 
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
+            onClick={() => navigate('/dashboard')}
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      ) : (
+        <button 
+          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+          onClick={handleEnroll}
+        >
+          Enroll Now
+        </button>
+      )}
+
+      <h3 className="text-2xl font-bold mt-8 mb-4">Course Outline</h3>
+      <ul className="space-y-4">
+        {[...Array(5)].map((_, index) => (
+          <li key={index} className="bg-gray-100 p-4 rounded-lg">
+            <h4 className="text-xl font-semibold mb-2">Module {index + 1}</h4>
+            <p className="text-gray-700">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+          </li>
         ))}
       </ul>
     </div>
   );
 }
 
-export default UserProfile;
+export default CourseDetail;

@@ -63,14 +63,14 @@ function App() {
     }
   };
 
-  const handleWalletConnect = (connected) => {
-    setIsWalletConnected(connected);
-  };
+  // const handleWalletConnect = (connected) => {
+  //   setIsWalletConnected(connected);
+  // };
 
   return (
     <Router>
       <div className="app">
-        {isAuthenticated && <WalletConnection onConnect={handleWalletConnect} />}
+        {/* {isAuthenticated && <WalletConnection onConnect={handleWalletConnect} />} */}
         <Header />
         <Routes>
           <Route path="/" element=
