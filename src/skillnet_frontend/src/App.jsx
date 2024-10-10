@@ -1,123 +1,111 @@
-// import React from 'react';
-// import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-// import { motion, AnimatePresence } from 'framer-motion';
-// import UserProfile from './Components/UserProfile';
-// // import CourseList from './components/CourseList';
-// // import MentorshipPanel from './components/MentorshipPanel';
-// // import JobMarketplace from './components/JobMarketplace';
-// // import LoginPage from './Components/LoginForm';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { AuthClient } from '@dfinity/auth-client';
+import { HttpAgent } from '@dfinity/agent';
+import { idlFactory as backendIdlFactory } from '../../declarations/skillnet_backend/skillnet_backend.did.js';
+import { canisterId as backendCanisterId } from '../../declarations/skillnet_backend/index.js';
 
-// const pageVariants = {
-//   initial: { opacity: 0, x: "-100vw" },
-//   in: { opacity: 1, x: 0 },
-//   out: { opacity: 0, x: "100vw" }
-// };
+// Import components
+import LandingPage from './components/LandingPage';
+import Dashboard from './components/Dashboard';
+import CourseDetail from './components/courseDetail';
+import UserProfile from './components/UserProfile';
+import WalletConnection from './components/WalletConnection';
 
-// const pageTransition = {
-//   type: "tween",
-//   ease: "anticipate",
-//   duration: 0.5
-// };
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authClient, setAuthClient] = useState(null);
+  const [backendActor, setBackendActor] = useState(null);
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
 
-// const App = () => {
-//   return (
-//     <Router>
-//       <div className="app bg-gradient-to-br from-purple-900 via-purple-700 to-purple-500 min-h-screen text-white">
-//         <nav className="p-4">
-//           <ul className="flex justify-center space-x-4">
-//             <li><Link to="/" className="hover:text-purple-200 transition-colors">Home</Link></li>
-//             <li><Link to="/profile" className="hover:text-purple-200 transition-colors">Profile</Link></li>
-//             <li><Link to="/courses" className="hover:text-purple-200 transition-colors">Courses</Link></li>
-//             <li><Link to="/mentorship" className="hover:text-purple-200 transition-colors">Mentorship</Link></li>
-//             <li><Link to="/jobs" className="hover:text-purple-200 transition-colors">Jobs</Link></li>
-//           </ul>
-//         </nav>
+  useEffect(() => {
+    const initAuth = async () => {
+      const client = await AuthClient.create();
+      setAuthClient(client);
 
-//         <AnimatePresence exitBeforeEnter>
-//           <Routes>
-//             <Route path="/" element={
-//               <motion.div
-//                 initial="initial"
-//                 animate="in"
-//                 exit="out"
-//                 variants={pageVariants}
-//                 transition={pageTransition}
-//               >
-//                 <LoginPage />
-//               </motion.div>
-//             } />
-//             <Route path="/profile" element={
-//               <motion.div
-//                 initial="initial"
-//                 animate="in"
-//                 exit="out"
-//                 variants={pageVariants}
-//                 transition={pageTransition}
-//               >
-//                 <UserProfile user={{name: 'John Doe', skills: ['React', 'Blockchain']}} wallet={{address: '0x123...', balance: '100 SKN'}} />
-//               </motion.div>
-//             } />
-//             <Route path="/courses" element={
-//               <motion.div
-//                 initial="initial"
-//                 animate="in"
-//                 exit="out"
-//                 variants={pageVariants}
-//                 transition={pageTransition}
-//               >
-//                 <CourseList courses={[{id: 1, title: 'React Basics', description: 'Learn React fundamentals', progress: 50}]} onEnroll={() => {}} />
-//               </motion.div>
-//             } />
-//             <Route path="/mentorship" element={
-//               <motion.div
-//                 initial="initial"
-//                 animate="in"
-//                 exit="out"
-//                 variants={pageVariants}
-//                 transition={pageTransition}
-//               >
-//                 <MentorshipPanel mentors={[{id: 1, name: 'Jane Doe', expertise: 'React'}]} onRequestMentor={() => {}} />
-//               </motion.div>
-//             } />
-//             <Route path="/jobs" element={
-//               <motion.div
-//                 initial="initial"
-//                 animate="in"
-//                 exit="out"
-//                 variants={pageVariants}
-//                 transition={pageTransition}
-//               >
-//                 <JobMarketplace />
-//               </motion.div>
-//             } />
-//           </Routes>
-//         </AnimatePresence>
-//       </div>
-//     </Router>
-//   );
-// };
+      if (await client.isAuthenticated()) {
+        handleAuthenticated(client);
+      }
+    };
 
-// export default App;
+    initAuth();
+  }, []);
 
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import LandingPage from './Components/landingPage';
-import UserProfile from './Components/UserProfile';
+  const handleAuthenticated = async (client) => {
+    setIsAuthenticated(true);
+    const identity = client.getIdentity();
+    const agent = new HttpAgent({ identity });
+    const actor = await window.Actor.createActor(backendIdlFactory, {
+      agent,
+      canisterId: backendCanisterId,
+    });
+    setBackendActor(actor);
+  };
 
-const App = () => {
+  const login = async () => {
+    if (authClient) {
+      await authClient.login({
+        identityProvider: process.env.II_URL,
+        onSuccess: () => handleAuthenticated(authClient),
+      });
+    }
+  };
+
+  const logout = async () => {
+    if (authClient) {
+      await authClient.logout();
+      setIsAuthenticated(false);
+      setBackendActor(null);
+    }
+  };
+
+  const handleWalletConnect = (connected) => {
+    setIsWalletConnected(connected);
+  };
 
   return (
     <Router>
-      <div className="flex flex-col min-h-screen">
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/profile" element={<UserProfile />} />
-          </Routes>
-        </main>
+      <div className="app">
+        {isAuthenticated && <WalletConnection onConnect={handleWalletConnect} />}
+        <Routes>
+          <Route path="/" element=
+            {isAuthenticated ? <Navigate to="/dashboard" /> : <LandingPage onLogin={login} />}
+          />
+          <Route path="/dashboard" element=
+            {isAuthenticated ? (
+              <Dashboard 
+                backendActor={backendActor} 
+                onLogout={logout}
+                isWalletConnected={isWalletConnected}
+              />
+            ) : (
+              <Navigate to="/" />
+            )}
+          />
+          <Route path="/course/:id" element=
+            {isAuthenticated ? (
+              <CourseDetail 
+                backendActor={backendActor}
+                isWalletConnected={isWalletConnected}
+              />
+            ) : (
+              <Navigate to="/" />
+            )}
+          />
+          <Route path="/profile" element=
+            {isAuthenticated ? (
+              <UserProfile 
+                backendActor={backendActor}
+                isWalletConnected={isWalletConnected}
+              />
+            ) : (
+              <Navigate to="/" />
+            )}
+          />
+        </Routes>
       </div>
     </Router>
   );
-};
+}
 
 export default App;
