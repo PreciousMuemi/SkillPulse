@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { AuthClient } from '@dfinity/auth-client';
 import { HttpAgent } from '@dfinity/agent';
-import { idlFactory as backendIdlFactory } from '../../declarations/skillnet_backend/skillnet_backend.did.js';
-import { canisterId as backendCanisterId } from '../../declarations/skillnet_backend/index.js';
 
 // Import components
 import LandingPage from './components/LandingPage';
@@ -11,6 +9,12 @@ import Dashboard from './components/Dashboard';
 import CourseDetail from './components/courseDetail';
 import UserProfile from './components/UserProfile';
 import WalletConnection from './components/WalletConnection';
+import Footer from './components/Footer';
+import Header from './components/Header';
+import ProgressTracker from './components/ProgressTracker';
+import MentorMenteeMatch from './components/MentorMenteeMatch';
+import LeaderBoard from './components/LeaderBoard';
+import NFTGallery from './components/NFTgallery';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -67,6 +71,7 @@ function App() {
     <Router>
       <div className="app">
         {isAuthenticated && <WalletConnection onConnect={handleWalletConnect} />}
+        <Header />
         <Routes>
           <Route path="/" element=
             {isAuthenticated ? <Navigate to="/dashboard" /> : <LandingPage onLogin={login} />}
@@ -102,7 +107,38 @@ function App() {
               <Navigate to="/" />
             )}
           />
+          <Route path="/leaderboard" element=
+            {isAuthenticated ? (
+              <LeaderBoard 
+                backendActor={backendActor}
+                isWalletConnected={isWalletConnected}
+              />
+            ) : (
+              <Navigate to="/" />
+            )}
+          />
+          <Route path="/mentor-match" element=
+            {isAuthenticated ? (
+              <MentorMenteeMatch
+                backendActor={backendActor}
+                isWalletConnected={isWalletConnected}
+              />
+            ) : (
+              <Navigate to="/" />
+            )}
+          />
+          <Route path="/nft-gallery" element=
+            {isAuthenticated ? (
+              <NFTGallery 
+                backendActor={backendActor}
+                isWalletConnected={isWalletConnected}
+              />
+            ) : (
+              <Navigate to="/" />
+            )}
+          />
         </Routes>
+        <Footer />
       </div>
     </Router>
   );
