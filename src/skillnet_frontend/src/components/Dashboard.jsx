@@ -174,7 +174,7 @@ const Dashboard = ({ onLogout }) => {
                     >
                       Enroll Now
                     </button> */}
-                  )}
+                  
                 </div>
               </motion.div>
             ))}
