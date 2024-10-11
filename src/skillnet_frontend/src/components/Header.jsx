@@ -6,9 +6,28 @@ import Logo from './skillnet.jpg';
 function Header() {
   const { isAuthenticated, login, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [connectedWallet, setConnectedWallet] = useState([]);
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
+  };
+
+  const connectWallet = async (walletType) => {
+    try {
+      if (walletType === 'Plug') {
+        if (!window.ic?.plug) {
+          window.open('https://plugwallet.ooo/', '_blank');
+          throw new Error('Plug wallet not installed');
+        }
+        await window.ic.plug.requestConnect();
+        const principalId = await window.ic.plug.agent.getPrincipal();
+        setConnectedWallet(wallets => [...wallets, { type: 'Plug', address: principalId.toString() }]);
+      }
+      alert(`${walletType} wallet connected successfully!`);
+    } catch (error) {
+      console.error(`Error connecting ${walletType} wallet:`, error);
+      alert(`Failed to connect ${walletType} wallet. ${error.message}`);
+    }
   };
 
   return (
@@ -41,6 +60,12 @@ function Header() {
 
         {/* Auth Button */}
         <div className="hidden md:flex">
+            <button
+              onClick={() => connectWallet('Plug')}
+              className="bg-[#6A9C89] text-white px-4 py-2 rounded-full font-semibold hover:bg-opacity-80 transition duration-300"
+            >
+              Plug Wallet
+            </button>
           {isAuthenticated ? (
             <button
               onClick={logout}
