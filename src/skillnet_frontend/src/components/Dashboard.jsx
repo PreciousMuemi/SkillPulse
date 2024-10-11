@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useUser } from './UserContext';
+import Header from './Header';
 
 const courseCategories = [
   { id: 'softSkills', name: 'Soft Skills', icon: '🗣️' },
@@ -45,11 +46,11 @@ const Dashboard = ({ onLogout }) => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!userProfile) {
-      fetchUserProfile();
-    }
-  }, [userProfile]);
+  // useEffect(() => {
+  //   if (!userProfile) {
+  //     fetchUserProfile();
+  //   }
+  // }, []);
 
   const fetchUserProfile = async () => {
     // Simulating API call
@@ -78,10 +79,9 @@ const Dashboard = ({ onLogout }) => {
     enrollInCourse(courseId);
   };
 
-  if (!userProfile) return <div className="flex justify-center items-center h-screen">Loading...</div>;
-
   return (
     <div className="min-h-screen bg-gray-100">
+      <Header />
       {/* <nav className="bg-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -100,20 +100,20 @@ const Dashboard = ({ onLogout }) => {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Welcome back, {userProfile.username}!</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">Welcome back, !</h1>
           
           <div className="bg-white overflow-hidden shadow rounded-lg divide-y divide-gray-200 mb-6">
             <div className="px-4 py-5 sm:p-6">
               <h2 className="text-lg font-medium text-gray-900">Your Progress</h2>
               <div className="mt-3 flex justify-between items-center">
-                <div className="text-sm font-medium text-gray-500">Level {userProfile.level}</div>
-                <div className="text-sm font-medium text-gray-500">{userProfile.xp} XP</div>
+                <div className="text-sm font-medium text-gray-500">Level</div>
+                <div className="text-sm font-medium text-gray-500"> XP</div>
               </div>
               <div className="mt-2 relative pt-1">
                 <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
                   <motion.div 
                     initial={{ width: 0 }}
-                    animate={{ width: `${(userProfile.xp % 1000) / 1000 * 100}%` }}
+                    animate={{ width: `${(323 % 1000) / 1000 * 100}%` }}
                     transition={{ duration: 1 }}
                     className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"
                   />
@@ -121,7 +121,7 @@ const Dashboard = ({ onLogout }) => {
               </div>
             </div>
             <div className="px-4 py-4 sm:px-6">
-              <div className="text-sm font-medium text-gray-500">Wallet Balance: {userProfile.tokenBalance} SKN</div>
+              <div className="text-sm font-medium text-gray-500">Wallet Balance:  SKN</div>
             </div>
           </div>
 
@@ -160,7 +160,7 @@ const Dashboard = ({ onLogout }) => {
                     </span>
                     <span className="text-sm text-gray-500">{course.duration}</span>
                   </div>
-                  {enrolledCourses.includes(course.id) ? (
+                  {/* {enrolledCourses.includes(course.id) ? (
                     <button 
                       onClick={() => navigate(`/course/${course.id}`)}
                       className="mt-4 w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
@@ -173,7 +173,7 @@ const Dashboard = ({ onLogout }) => {
                       className="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
                     >
                       Enroll Now
-                    </button>
+                    </button> */}
                   )}
                 </div>
               </motion.div>

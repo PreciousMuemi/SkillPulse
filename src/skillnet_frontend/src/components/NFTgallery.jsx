@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getUserNFTs } from '../services/api';
 import { useAuth } from './AuthContext';
+import Header from './Header';
 
 function NFTGallery() {
   const [nfts, setNFTs] = useState([]);
@@ -20,6 +21,7 @@ function NFTGallery() {
 
   return (
     <div className="nft-gallery">
+      <Header />
       <h2>Your NFT Gallery</h2>
       {nfts.length === 0 ? (
         <p>You haven't earned any NFTs yet. Complete courses to earn NFTs!</p>

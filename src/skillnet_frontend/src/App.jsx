@@ -71,7 +71,6 @@ function App() {
     <Router>
       <div className="app">
         {/* {isAuthenticated && <WalletConnection onConnect={handleWalletConnect} />} */}
-        <Header />
         <Routes>
           <Route path="/" element=
             {isAuthenticated ? <Navigate to="/dashboard" /> : <LandingPage onLogin={login} />}

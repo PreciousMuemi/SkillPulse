@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
+import Header from './Header';
 
 const dummyCourses = [
   // ... (keep the dummyCourses array as it was)
@@ -12,6 +13,7 @@ const courseCategories = [
 
 function CourseDetail() {
   const [course, setCourse] = useState(null);
+  const [enrolled, setEnrolled] = useState(false); // State to track enrollment
   const { userProfile, enrolledCourses, enrollInCourse } = useUser();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -21,21 +23,23 @@ function CourseDetail() {
       // Simulating API call with dummy data
       const courseData = dummyCourses.find(c => c.id === parseInt(id));
       setCourse(courseData);
+      setEnrolled(enrolledCourses.includes(parseInt(id))); // Check if already enrolled
     }
     fetchCourse();
-  }, [id]);
+  }, [id, enrolledCourses]);
 
   const handleEnroll = () => {
     enrollInCourse(parseInt(id));
+    setEnrolled(true); // Set enrolled state to true
   };
 
   if (!course || !userProfile) return <div className="flex justify-center items-center h-screen">Loading...</div>;
 
   const category = courseCategories.find(cat => cat.id === course.category);
-  const isEnrolled = enrolledCourses.includes(parseInt(id));
 
   return (
     <div className="max-w-3xl mx-auto mt-8 p-6 bg-white shadow-lg rounded-lg">
+      <Header />
       <h2 className="text-3xl font-bold mb-4">{course.title}</h2>
       <div className="flex items-center mb-4">
         <span className="text-2xl mr-2">{category.icon}</span>
@@ -45,21 +49,15 @@ function CourseDetail() {
       </div>
       <p className="text-gray-600 mb-4">{course.description}</p>
       <p className="text-lg font-semibold mb-4">Duration: {course.duration}</p>
-      
-      {isEnrolled ? (
-        <div>
-          <button 
-            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors mr-4"
-          >
-            Start Learning
-          </button>
-          <button 
-            className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
-            onClick={() => navigate('/dashboard')}
-          >
-            Back to Dashboard
-          </button>
-        </div>
+
+      {/* Enroll button */}
+      {enrolled ? (
+        <button 
+          className="bg-green-500 text-white px-4 py-2 rounded-md transition-colors"
+          disabled
+        >
+          Enrolled
+        </button>
       ) : (
         <button 
           className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
@@ -75,6 +73,15 @@ function CourseDetail() {
           <li key={index} className="bg-gray-100 p-4 rounded-lg">
             <h4 className="text-xl font-semibold mb-2">Module {index + 1}</h4>
             <p className="text-gray-700">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+
+            {/* Project section for each module */}
+            <div className="mt-4">
+              <h4 className="text-lg font-semibold">Project for Module {index + 1}</h4>
+              <p className="text-gray-600 mb-2">Project description goes here. Students can submit their work.</p>
+              <button className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors">
+                Submit Project
+              </button>
+            </div>
           </li>
         ))}
       </ul>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Briefcase } from 'lucide-react';
-
+import Header from './Header';
 
 const JobMarketplace = ({ icpActor }) => {
   const [jobs, setJobs] = useState([]);
@@ -16,6 +16,7 @@ const JobMarketplace = ({ icpActor }) => {
   }, [icpActor]);
   return (
     <div className="bg-purple-800 p-6 rounded-lg shadow-lg">
+      <Header />
       <h2 className="text-2xl font-bold mb-4">Job Marketplace</h2>
       <div className="space-y-4">
         {jobs.map((job, index) => (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getLeaderboard } from '../services/api';
+import Header from './Header';
 
 function LeaderBoard() {
   const [leaderboard, setLeaderboard] = useState([]);
@@ -14,6 +15,7 @@ function LeaderBoard() {
 
   return (
     <div className="leaderboard">
+      <Header />
       <h2>Leaderboard</h2>
       <table>
         <thead>

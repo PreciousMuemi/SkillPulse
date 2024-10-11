@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { becomeMentor, requestMentor } from '../services/api';
 import { useAuth } from './AuthContext';
+import Header from './Header';
 
 function MentorMenteeMatch() {
   const [isMentor, setIsMentor] = useState(false);
@@ -33,6 +34,7 @@ function MentorMenteeMatch() {
 
   return (
     <div className="mentor-mentee-match">
+        <Header />
       <h2>Mentor-Mentee Matching</h2>
       {!isMentor && !hasMentor && (
         <div>

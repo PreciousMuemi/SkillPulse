@@ -1,15 +1,11 @@
 import Array "mo:base/Array";
 import HashMap "mo:base/HashMap";
 import Hash "mo:base/Hash";
-import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
-import Nat32 "mo:base/Nat32";
 import Option "mo:base/Option";
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
-import Time "mo:base/Time";
-import Buffer "mo:base/Buffer";
 
 actor SkillNet {
 
@@ -19,6 +15,8 @@ actor SkillNet {
     type NFTId = Nat;
     type Level = Nat;
     type Rank = Text;
+    type Difficulty = { #beginner; #intermediate; #advanced };
+    type Category = { #softSkills; #computing; #dataScience; #design; #business; #languages };
 
     type User = {
         id: UserId;
@@ -33,6 +31,7 @@ actor SkillNet {
         isMentor: Bool;
         menteeId: ?UserId;
         mentorId: ?UserId;
+        achievements: [Achievement];
     };
 
     type Course = {
@@ -41,7 +40,10 @@ actor SkillNet {
         description: Text;
         tokenReward: Nat;
         nftReward: ?NFTId;
+        category: Category;
+        difficulty: Difficulty;
         modules: [Module];
+        projects: [Project];
     };
 
     type Module = {
@@ -49,6 +51,19 @@ actor SkillNet {
         title: Text;
         content: Text;
         quizQuestions: [QuizQuestion];
+    };
+
+    type Project = {
+        id: Nat;
+        description: Text;
+        feedback: [Feedback];
+        isComplete: Bool;
+    };
+
+    type Feedback = {
+        reviewerId: UserId;
+        comments: Text;
+        rating: Nat;
     };
 
     type QuizQuestion = {
@@ -65,85 +80,71 @@ actor SkillNet {
         rarity: Text;
     };
 
+    type Achievement = {
+        courseId: CourseId;
+        certAwarded: Bool;
+        badges: [Text];
+        tokenAwarded: Nat;
+    };
+
     type UserProgress = {
         userId: UserId;
         courseId: CourseId;
         completedModules: [Nat];
-        quizScores: [(Nat, Nat)]; // (moduleId, score)
+        completedProjects: [Nat];
+        quizScores: [(Nat, Nat)];
     };
 
-    // Custom hash function for (UserId, CourseId) pair
-    private func hashUserIdCourseId(key: (UserId, CourseId)): Hash.Hash {
-        let (userId, courseId) = key;
-        let userIdHash = Principal.hash(userId);
-        let courseIdHash = Hash.hash(courseId);
-        // Combine the two hashes
-        userIdHash ^ courseIdHash
+// Helper functions
+    private func equal(a: (UserId, CourseId), b: (UserId, CourseId)) : Bool {
+        Principal.equal(a.0, b.0) and a.1 == b.1
+    };
+ private func hashUserIdCourseId(key: (UserId, CourseId)) : Hash.Hash {
+        let principalHash = Principal.hash(key.0);
+        let courseIdHash = Hash.hash(key.1);
+        principalHash ^ courseIdHash
     };
 
     // State
     private stable var nextCourseId : Nat = 0;
     private stable var nextNFTId : Nat = 0;
     private let users = HashMap.HashMap<UserId, User>(0, Principal.equal, Principal.hash);
-    private let courses = HashMap.HashMap<CourseId, Course>(0, Nat.equal, Nat32.fromNat);
-    private let nfts = HashMap.HashMap<NFTId, NFT>(0, Nat.equal, Nat32.fromNat);
-    private let userProgress = HashMap.HashMap<(UserId, CourseId), UserProgress>(0, func((k1, k2)) = k1.0 == k2.0 and k1.1 == k2.1, hashUserIdCourseId);
+    private let courses = HashMap.HashMap<CourseId, Course>(0, Nat.equal, Hash.hash);
+    private let nfts = HashMap.HashMap<NFTId, NFT>(0, Nat.equal, Hash.hash);
+    private let userProgress = HashMap.HashMap<(UserId, CourseId), UserProgress>(0, equal, hashUserIdCourseId);
 
-    // Helper Functions
-    private func calculateLevel(completedCourses: [CourseId]) : Level {
-        completedCourses.size() + 1 // Simple level calculation
-    };
+    // Mentor Applications
+    private let mentorApplications = HashMap.HashMap<UserId, Bool>(0, Principal.equal, Principal.hash); 
 
-    private func calculateRank(level: Level) : Rank {
-        if (level < 5) "Novice"
-        else if (level < 10) "Apprentice"
-        else if (level < 20) "Adept"
-        else if (level < 30) "Expert"
-        else "Master"
-    };
+    // Course Creation
+    public shared(msg) func createCourse(
+        title: Text, 
+        description: Text, 
+        category: Category, 
+        difficulty: Difficulty, 
+        tokenReward: Nat, 
+        modules: [Module], 
+        projectDescriptions: [(Nat, Text)]
+    ) : async Result.Result<CourseId, Text> {
+        let projects : [Project] = Array.map(projectDescriptions, func (p : (Nat, Text)) : Project {
+            {
+                id = p.0;
+                description = p.1;
+                feedback = [];
+                isComplete = false;
+            }
+        });
 
-    // User Management
-    public shared(msg) func createUser(username : Text) : async Result.Result<(), Text> {
-        let userId = msg.caller;
-        switch (users.get(userId)) {
-            case (?_) { #err("User already exists") };
-            case null {
-                let newUser : User = {
-                    id = userId;
-                    username = username;
-                    skills = [];
-                    completedCourses = [];
-                    enrolledCourses = [];
-                    tokens = 100; // Starting tokens
-                    nfts = [];
-                    level = 1;
-                    rank = "Novice";
-                    isMentor = false;
-                    menteeId = null;
-                    mentorId = null;
-                };
-                users.put(userId, newUser);
-                #ok()
-            };
-        }
-    };
-
-    public query func getUser(userId : UserId) : async Result.Result<User, Text> {
-        switch (users.get(userId)) {
-            case (?user) { #ok(user) };
-            case null { #err("User not found") };
-        }
-    };
-
-    // Course Management
-    public shared(msg) func createCourse(title : Text, description : Text, tokenReward : Nat, modules : [Module]) : async Result.Result<CourseId, Text> {
         let course : Course = {
             id = nextCourseId;
             title = title;
             description = description;
             tokenReward = tokenReward;
             nftReward = ?nextNFTId;
+            category = category;
+            difficulty = difficulty;
             modules = modules;
+            projects = projects;
         };
         courses.put(nextCourseId, course);
 
@@ -157,24 +158,38 @@ actor SkillNet {
         };
         nfts.put(nextNFTId, nft);
 
+        let createdCourseId = nextCourseId;
         nextCourseId += 1;
         nextNFTId += 1;
-        #ok(nextCourseId - 1)
+        #ok(createdCourseId)
     };
 
-    public query func getCourse(courseId : CourseId) : async Result.Result<Course, Text> {
-        switch (courses.get(courseId)) {
-            case (?course) { #ok(course) };
-            case null { #err("Course not found") };
-        }
-    };
-
-    public shared(msg) func enrollInCourse(courseId : CourseId) : async Result.Result<(), Text> {
+    // Course Enrollment with Difficulty Restriction
+    public shared(msg) func enrollInCourse(courseId: CourseId) : async Result.Result<(), Text> {
         let userId = msg.caller;
         switch (users.get(userId), courses.get(courseId)) {
             case (?user, ?course) {
-                if (Array.find<CourseId>(user.enrolledCourses, func(id) { id == courseId }) != null) {
-                    return #err("Already enrolled in this course");
+                // Check if the user has completed the previous difficulty
+                let difficultyPassed = switch (course.difficulty) {
+                    case (#beginner) { true };
+                    case (#intermediate) { 
+                        Array.foldLeft<CourseId, Bool>(user.completedCourses, false, func(acc, id) {
+                            acc or Option.get(Option.map(courses.get(id), func (c: Course) : Bool { 
+                                c.difficulty == #beginner 
+                            }), false)
+                        })
+                    };
+                    case (#advanced) { 
+                        Array.foldLeft<CourseId, Bool>(user.completedCourses, false, func(acc, id) {
+                            acc or Option.get(Option.map(courses.get(id), func (c: Course) : Bool { 
+                                c.difficulty == #intermediate 
+                            }), false)
+                        })
+                    };
+                };
+                
+                if (not difficultyPassed) {
+                    return #err("Complete the previous difficulty before enrolling.");
                 };
 
                 let updatedUser : User = {
@@ -188,6 +203,7 @@ actor SkillNet {
                     userId = userId;
                     courseId = courseId;
                     completedModules = [];
+                    completedProjects = [];
                     quizScores = [];
                 };
                 userProgress.put((userId, courseId), newProgress);
@@ -199,131 +215,110 @@ actor SkillNet {
         }
     };
 
-    // Course Progress and Completion
-    public shared(msg) func completeModule(courseId : CourseId, moduleId : Nat, quizScore : Nat) : async Result.Result<(), Text> {
+    // Submit Project for Review
+    public shared(msg) func submitProject(courseId: CourseId, projectId: Nat) : async Result.Result<(), Text> {
         let userId = msg.caller;
-        switch (userProgress.get((userId, courseId))) {
-            case (?progress) {
-                let updatedCompletedModules = Array.append<Nat>(progress.completedModules, [moduleId]);
-                let updatedQuizScores = Array.append<(Nat, Nat)>(progress.quizScores, [(moduleId, quizScore)]);
-                
-                let updatedProgress : UserProgress = {
-                    progress with
-                    completedModules = updatedCompletedModules;
-                    quizScores = updatedQuizScores;
-                };
-                userProgress.put((userId, courseId), updatedProgress);
-
-                // Check if all modules are completed
-                switch (courses.get(courseId)) {
-                    case (?course) {
-                        if (updatedCompletedModules.size() == course.modules.size()) {
-                            await completeCourse(userId, courseId);
+        switch (userProgress.get((userId, courseId)), courses.get(courseId)) {
+            case (?progress, ?course) {
+                let projectOpt = Array.find<Project>(course.projects, func(proj) { proj.id == projectId });
+                switch (projectOpt) {
+                    case (?project) {
+                        if (project.isComplete) {
+                            return #err("Project already completed.");
                         };
-                    };
-                    case null { return #err("Course not found") };
-                };
+                        let updatedProjects = Array.map<Project, Project>(course.projects, func (p) {
+                            if (p.id == projectId) { { p with isComplete = true } } else { p }
+                        });
+                        let updatedCourse = { course with projects = updatedProjects };
+                        courses.put(courseId, updatedCourse);
+                        
+                        let updatedProgress = {
+                            progress with
+                            completedProjects = Array.append<Nat>(progress.completedProjects, [projectId])
+                        };
+                        userProgress.put((userId, courseId), updatedProgress);
 
-                #ok()
+                        #ok()
+                    };
+                    case null { #err("Project not found.") };
+                };
             };
-            case null { #err("User progress not found") };
+            case (_, _) { #err("User progress or course not found.") };
         }
     };
 
-    private func completeCourse(userId : UserId, courseId : CourseId) : async () {
-        switch (users.get(userId), courses.get(courseId)) {
-            case (?user, ?course) {
-                let updatedUser : User = {
-                    user with
-                    completedCourses = Array.append<CourseId>(user.completedCourses, [courseId]);
-                    tokens = user.tokens + course.tokenReward;
-                    level = calculateLevel(Array.append<CourseId>(user.completedCourses, [courseId]));
-                    rank = calculateRank(calculateLevel(Array.append<CourseId>(user.completedCourses, [courseId])));
-                    nfts = Array.append<NFTId>(user.nfts, [Option.get(course.nftReward, nextNFTId)]);
-                };
-                users.put(userId, updatedUser);
+    // Add Feedback to Project
+    public shared(msg) func addProjectFeedback(courseId: CourseId, projectId: Nat, feedback: Feedback) : async Result.Result<(), Text> {
+        let reviewerId = msg.caller;
+        switch (courses.get(courseId)) {
+            case (?course) {
+                let updatedProjects = Array.map<Project, Project>(course.projects, func (p) {
+                    if (p.id == projectId) {
+                        { p with feedback = Array.append<Feedback>(p.feedback, [feedback]) }
+                    } else { p }
+                });
+                let updatedCourse = { course with projects = updatedProjects };
+                courses.put(courseId, updatedCourse);
+                #ok()
             };
-            case _ { /* Handle errors */ };
-        };
+            case null { #err("Course not found.") };
+        }
     };
 
-    // NFT Management
-    public query func getUserNFTs(userId : UserId) : async Result.Result<[NFT], Text> {
+    // Mentor Applications and Approval
+    public shared(msg) func applyForMentor() : async Result.Result<(), Text> {
+        let userId = msg.caller;
         switch (users.get(userId)) {
             case (?user) {
-                let userNFTs = Array.mapFilter<NFTId, NFT>(user.nfts, func (id) {
-                    nfts.get(id)
+                let hasAdvancedCourse = Array.foldLeft<CourseId, Bool>(user.completedCourses, false, func(acc, courseId) {
+                    acc or Option.get(Option.map(courses.get(courseId), func (c: Course) : Bool { 
+                        c.difficulty == #advanced 
+                    }), false)
                 });
-                #ok(userNFTs)
+                
+                if (hasAdvancedCourse) {
+                    mentorApplications.put(userId, true);
+                    #ok()
+                } else {
+                    #err("Complete an advanced-level course to qualify for mentor status.")
+                }
             };
-            case null { #err("User not found") };
+            case null { #err("User not found.") };
+        }
+    };
+
+    public shared(msg) func approveMentor(userId: UserId) : async Result.Result<(), Text> {
+        switch (users.get(userId)) {
+            case (?user) {
+                let updatedUser = { user with isMentor = true };
+                users.put(userId, updatedUser);
+                ignore mentorApplications.remove(userId);
+                #ok()
+            };
+            case null { #err("User not found.") };
         }
     };
 
     // Mentor-Mentee Matching
-    public shared(msg) func becomeMentor() : async Result.Result<(), Text> {
-        let userId = msg.caller;
-        switch (users.get(userId)) {
-            case (?user) {
-                if (user.isMentor) {
-                    return #err("User is already a mentor");
-                };
-                let updatedUser : User = {
-                    user with
-                    isMentor = true;
-                };
-                users.put(userId, updatedUser);
-                #ok()
-            };
-            case null { #err("User not found") };
-        }
-    };
+    public shared(msg) func matchMentor(menteeId: UserId) : async Result.Result<(), Text> {
+        switch (users.get(menteeId)) {
+            case (?mentee) {
+                // Find available mentor
+                for ((mentorId, mentor) in users.entries()) {
+                    if (mentor.isMentor and Option.isNull(mentor.menteeId)) {
+                        // Update mentee and mentor with each other's IDs
+                        let updatedMentee = { mentee with mentorId = ?mentorId };
+                        users.put(menteeId, updatedMentee);
 
-    public shared(msg) func requestMentor() : async Result.Result<(), Text> {
-        let userId = msg.caller;
-        switch (users.get(userId)) {
-            case (?user) {
-                if (user.mentorId != null) {
-                    return #err("User already has a mentor");
-                };
-                // Find an available mentor (simple implementation)
-                for ((_, potentialMentor) in users.entries()) {
-                    if (potentialMentor.isMentor and potentialMentor.menteeId == null) {
-                        let updatedMentee : User = {
-                            user with
-                            mentorId = ?potentialMentor.id;
-                        };
-                        let updatedMentor : User = {
-                            potentialMentor with
-                            menteeId = ?userId;
-                        };
-                        users.put(userId, updatedMentee);
-                        users.put(potentialMentor.id, updatedMentor);
+                        let updatedMentor = { mentor with menteeId = ?menteeId };
+                        users.put(mentorId, updatedMentor);
+
                         return #ok();
                     };
                 };
-                #err("No available mentors")
+                #err("No available mentors found.")
             };
-            case null { #err("User not found") };
+            case null { #err("Mentee not found.") };
         }
     };
-
-    // Additional query functions for user progress, course listings, etc.
-    public query func getUserProgress(userId : UserId, courseId : CourseId) : async Result.Result<UserProgress, Text> {
-        switch (userProgress.get((userId, courseId))) {
-            case (?progress) { #ok(progress) };
-            case null { #err("Progress not found") };
-        }
-    };
-
-    // Updated listCourses function
-    public query func listCourses() : async [Course] {
-        Iter.toArray(courses.vals())
-    };
-
-    public query func listMentors() : async [User] {
-        Buffer.toArray(Buffer.mapFilter<User, User>(Buffer.fromIter(users.vals()), func (user) {
-            if (user.isMentor) ?user else null
-        }))
-    };
-}
+};

@@ -16,9 +16,6 @@ function ProgressTracker({ courseId }) {
     fetchProgress();
   }, [isAuthenticated, courseId]);
 
-  if (!isAuthenticated) return null;
-  if (!progress) return <div>Loading progress...</div>;
-
   return (
     <div className="progress-tracker">
       <h3>Your Progress</h3>
