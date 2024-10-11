@@ -11,10 +11,11 @@ import UserProfile from './components/UserProfile';
 import WalletConnection from './components/WalletConnection';
 import Footer from './components/Footer';
 import Header from './components/Header';
-import ProgressTracker from './components/ProgressTracker';
 import MentorMenteeMatch from './components/MentorMenteeMatch';
 import LeaderBoard from './components/LeaderBoard';
 import NFTGallery from './components/NFTgallery';
+import AchievementsPanel from './components/AchievementsPanel';
+import JobMarket from './components/jobMarket';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -129,6 +130,26 @@ function App() {
           <Route path="/nft-gallery" element=
             {isAuthenticated ? (
               <NFTGallery 
+                backendActor={backendActor}
+                isWalletConnected={isWalletConnected}
+              />
+            ) : (
+              <Navigate to="/" />
+            )}
+          />
+          <Route path="/archievements" element=
+            {isAuthenticated ? (
+              <AchievementsPanel
+                backendActor={backendActor}
+                isWalletConnected={isWalletConnected}
+              />
+            ) : (
+              <Navigate to="/" />
+            )}
+          />
+          <Route path="/job-market" element=
+            {isAuthenticated ? (
+              <JobMarket 
                 backendActor={backendActor}
                 isWalletConnected={isWalletConnected}
               />

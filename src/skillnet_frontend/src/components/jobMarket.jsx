@@ -2,18 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Briefcase } from 'lucide-react';
 import Header from './Header';
+import { generateDummyJobs } from './dummy';
 
 const JobMarketplace = ({ icpActor }) => {
   const [jobs, setJobs] = useState([]);
+
   useEffect(() => {
-    const fetchJobs = async () => {
-      if (icpActor) {
-        const fetchedJobs = await icpActor.getAllJobs();
-        setJobs(fetchedJobs);
-      }
-    };
-    fetchJobs();
-  }, [icpActor]);
+    // Replace ICP actor call with dummy data
+    const fetchedJobs = generateDummyJobs(10); // Generate 10 dummy jobs
+    setJobs(fetchedJobs);
+  }, []);
+  
   return (
     <div className="bg-purple-800 p-6 rounded-lg shadow-lg">
       <Header />

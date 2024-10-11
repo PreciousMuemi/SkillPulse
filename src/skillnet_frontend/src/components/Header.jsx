@@ -56,6 +56,12 @@ function Header() {
           <li>
             <Link to="/leaderboard" className="hover:text-[#6A9C89] transition duration-300">Leaderboard</Link>
           </li>
+          <li>
+            <Link to="/job-market" className="hover:text-[#6A9C89] transition duration-300">Job Market</Link>
+          </li>
+          <li>
+            <Link to="/achievements" className="hover:text-[#6A9C89] transition duration-300">Achievements</Link>
+          </li>
         </ul>
 
         {/* Auth Button */}
