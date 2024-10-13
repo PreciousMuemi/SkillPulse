@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Briefcase, Award, TrendingUp, BookOpen } from 'lucide-react';
+import Header from './Header';
 
 // Dummy data generators
 const generateDummyNFTs = (count) => {
@@ -246,18 +247,7 @@ const AchievementsPanel = () => {
 const Components = () => {
   return (
     <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <BookOpen className="h-8 w-8 text-blue-600" />
-                <span className="ml-2 text-xl font-bold text-gray-800">CryptoEdu</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">

@@ -48,19 +48,10 @@ function Header() {
             <Link to="/profile" className="hover:text-[#6A9C89] transition duration-300">Profile</Link>
           </li>
           <li>
-            <Link to="/nft-gallery" className="hover:text-[#6A9C89] transition duration-300">NFT Gallery</Link>
-          </li>
-          <li>
             <Link to="/mentor-match" className="hover:text-[#6A9C89] transition duration-300">Mentor Match</Link>
           </li>
           <li>
-            <Link to="/leaderboard" className="hover:text-[#6A9C89] transition duration-300">Leaderboard</Link>
-          </li>
-          <li>
-            <Link to="/job-market" className="hover:text-[#6A9C89] transition duration-300">Job Market</Link>
-          </li>
-          <li>
-            <Link to="/achievements" className="hover:text-[#6A9C89] transition duration-300">Achievements</Link>
+            <Link to="/leaderboard" className="hover:text-[#6A9C89] transition duration-300">Components</Link>
           </li>
         </ul>
 
