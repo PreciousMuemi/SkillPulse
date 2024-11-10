@@ -84,3 +84,40 @@ export async function getUserProgress(courseId) {
     throw error;
   }
 }
+
+
+
+
+export async function matchMentor(menteeId, desiredSkills) {
+  try {
+    const response = await fetch('/match_mentor', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        mentee_id: menteeId,
+        desired_skills: desiredSkills
+      })
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Error matching mentor:', error);
+    throw error;
+  }
+}
+
+export async function getUserMentorStatus(userId) {
+  try {
+    const response = await fetch('/user_mentor_status', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching mentor status:', error);
+    throw error;
+  }
+}

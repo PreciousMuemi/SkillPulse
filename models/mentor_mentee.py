@@ -2,8 +2,10 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # Mock data - replace with actual data in a real implementation
 courses = {
@@ -77,27 +79,42 @@ def assess_course():
         'next_steps': next_steps
     })
 
+@app.route('/user_mentor_status', methods=['GET'])
+def get_user_mentor_status():
+    # In a real implementation, you would get the user ID from the session
+    user_id = request.args.get('user_id')
+    
+    is_mentor = user_id in mentors
+    has_mentor = False  # You would check your database for this
+    
+    return jsonify({
+        'is_mentor': is_mentor,
+        'has_mentor': has_mentor
+    })
+
+# Update the match_mentor route to handle the frontend requests
 @app.route('/match_mentor', methods=['POST'])
 def match_mentor():
     data = request.json
     mentee_id = data['mentee_id']
-    mentee_skills = users[mentee_id]['skills']
     desired_skills = data['desired_skills']
     
+    # Your existing matching logic here
     vectorizer = TfidfVectorizer()
     mentor_skills = [' '.join(mentors[m]['skills']) for m in mentors]
     mentor_vectors = vectorizer.fit_transform(mentor_skills)
     
-    mentee_vector = vectorizer.transform([' '.join(mentee_skills + desired_skills)])
+    mentee_vector = vectorizer.transform([' '.join(desired_skills)])
     
     similarities = cosine_similarity(mentee_vector, mentor_vectors)[0]
     
-    sorted_mentors = sorted(zip(mentors.keys(), similarities), key=lambda x: x[1], reverse=True)
+    sorted_mentors = sorted(zip(mentors.keys(), similarities), 
+                          key=lambda x: x[1], 
+                          reverse=True)
     
     return jsonify({
         'recommended_mentors': [m[0] for m in sorted_mentors[:3]],
         'match_scores': [float(m[1]) for m in sorted_mentors[:3]]
     })
-
 if __name__ == '__main__':
     app.run(debug=True)

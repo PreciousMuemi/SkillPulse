@@ -48,21 +48,40 @@ const MentorMenteeMatch = () => {
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    // Fetch user's current mentor/mentee status here
-  }, []);
+    const fetchMentorStatus = async () => {
+      try {
+        const status = await getUserMentorStatus();
+        setIsMentor(status.is_mentor);
+        setHasMentor(status.has_mentor);
+      } catch (err) {
+        setError('Failed to fetch mentor status');
+      }
+    };
+
+    if (isAuthenticated) {
+      fetchMentorStatus();
+    }
+  }, [isAuthenticated]);
 
   const handleAction = async (action) => {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await action();
-      if (result.ok) {
-        action === becomeMentor ? setIsMentor(true) : setHasMentor(true);
+      if (action === becomeMentor) {
+        const result = await becomeMentor();
+        setIsMentor(true);
       } else {
-        setError(result.err);
+        // For requesting a mentor, include desired skills
+        const desiredSkills = ['python', 'javascript']; // You can make this dynamic
+        const result = await matchMentor(userId, desiredSkills);
+        if (result.recommended_mentors.length > 0) {
+          setHasMentor(true);
+        } else {
+          setError('No suitable mentors found at this time');
+        }
       }
     } catch (err) {
-      setError('You are not eligible to become a mentor.');
+      setError(err.message || 'An error occurred');
     } finally {
       setIsLoading(false);
     }
