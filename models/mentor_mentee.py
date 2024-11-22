@@ -162,7 +162,7 @@ def match_mentor():
         "recommended_mentors": mentor_matches[:3],
         "match_confidence": float(np.mean([m["similarity"] for m in mentor_matches[:3]]))
     })
-
+ 
 
 if __name__ == '__main__':
     app.run(debug=True)
