@@ -121,3 +121,123 @@ export async function getUserMentorStatus(userId) {
     throw error;
   }
 }
+export const requestMentorMatch = async (menteeId, skills) => {
+    try {
+        const response = await window.ic.plug.call(
+            'skillnet_backend',
+            'requestMentorMatch',
+            { menteeId, skills }
+        );
+        return response;
+    } catch (error) {
+        throw new Error('Failed to fetch mentor matches');
+    }
+};
+
+import React from 'react';
+import {
+  SimpleGrid,
+  Box,
+  Text,
+  Badge,
+  Avatar,
+  VStack,
+  HStack,
+  Button
+} from '@chakra-ui/react';
+
+export const MentorList = ({ mentors }) => {
+  return (
+    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6} w="full">
+      {mentors.map((mentor) => (
+        <Box
+          key={mentor.mentor_id}
+          p={6}
+          borderWidth="1px"
+          borderRadius="lg"
+          shadow="sm"
+        >
+          <VStack align="start" spacing={4}>
+            <HStack>
+              <Avatar size="lg" name={mentor.name} />
+              <VStack align="start" spacing={1}>
+                <Text fontWeight="bold" fontSize="lg">{mentor.name}</Text>
+                <Badge colorScheme="green">
+                  {mentor.experience_years} years experience
+                </Badge>
+              </VStack>
+            </HStack>
+
+            <Text fontSize="sm" color="gray.600">
+              {mentor.bio}
+            </Text>
+
+            <HStack wrap="wrap">
+              {mentor.skills.map((skill) => (
+                <Badge key={skill} colorScheme="blue">
+                  {skill}
+                </Badge>
+              ))}
+            </HStack>
+
+            <Button colorScheme="blue" size="sm" w="full">
+              Schedule Session
+            </Button>
+          </VStack>
+        </Box>
+      ))}
+    </SimpleGrid>
+  );
+};
+
+import React, { useState } from 'react';
+import {
+  Input,
+  Button,
+  HStack,
+  Tag,
+  TagLabel,
+  TagCloseButton,
+  Box
+} from '@chakra-ui/react';
+
+export const SkillSearch = ({ onSearch }) => {
+  const [skills, setSkills] = useState([]);
+  const [input, setInput] = useState('');
+
+  const handleAddSkill = () => {
+    if (input.trim() && !skills.includes(input.trim())) {
+      setSkills([...skills, input.trim()]);
+      setInput('');
+    }
+  };
+
+  const handleRemoveSkill = (skillToRemove) => {
+    setSkills(skills.filter(skill => skill !== skillToRemove));
+  };
+
+  return (
+    <Box w="full">
+      <HStack mb={4}>
+        <Input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Enter skills..."
+          onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
+        />
+        <Button onClick={() => onSearch(skills)}>
+          Search Mentors
+        </Button>
+      </HStack>
+
+      <HStack spacing={2} wrap="wrap">
+        {skills.map((skill) => (
+          <Tag key={skill} size="md" borderRadius="full" variant="solid">
+            <TagLabel>{skill}</TagLabel>
+            <TagCloseButton onClick={() => handleRemoveSkill(skill)} />
+          </Tag>
+        ))}
+      </HStack>
+    </Box>
+  );
+};
