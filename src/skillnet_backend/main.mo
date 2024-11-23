@@ -1,13 +1,9 @@
 import Principal "mo:base/Principal";
 import HashMap "mo:base/HashMap";
-import Array "mo:base/Array";
-import Option "mo:base/Option";
-import Result "mo:base/Result";
+import Time "mo:base/Time";
 import Text "mo:base/Text";
 import Nat "mo:base/Nat";
-import Buffer "mo:base/Buffer";
 import Iter "mo:base/Iter";
-import Time "mo:base/Time";
 
 actor SkillNet {
     // Type definitions inside actor

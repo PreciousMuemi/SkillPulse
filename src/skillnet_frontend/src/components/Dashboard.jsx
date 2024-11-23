@@ -186,3 +186,10 @@ const Dashboard = ({ onLogout }) => {
 };
 
 export default Dashboard;
+
+<Box>
+    <Input {...inputProps} />
+    <Text fontSize="sm" color="gray.500" mt={1}>
+        Press Enter to add multiple skills
+    </Text>
+</Box>
