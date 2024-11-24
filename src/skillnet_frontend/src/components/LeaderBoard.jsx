@@ -117,7 +117,7 @@ const NFTGallery = () => {
 };
 
 // LeaderBoard Component
-const LeaderBoard = () => {
+export const LeaderBoard = () => {
   const [leaderboard, setLeaderboard] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -162,7 +162,7 @@ const LeaderBoard = () => {
 };
 
 // JobMarketplace Component
-const JobMarketplace = () => {
+export const JobMarketplace = () => {
   const [jobs, setJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -206,7 +206,7 @@ const JobMarketplace = () => {
 };
 
 // AchievementsPanel Component
-const AchievementsPanel = () => {
+export const AchievementsPanel = () => {
   const [achievements, setAchievements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -244,27 +244,27 @@ const AchievementsPanel = () => {
 };
 
 // Main App Component
-const Components = () => {
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <Header />
+// const Components = () => {
+//   return (
+//     <div className="min-h-screen bg-gray-100">
+//       <Header />
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <NFTGallery />
-          <div className="mt-10">
-            <LeaderBoard />
-          </div>
-          <div className="mt-10">
-            <JobMarketplace />
-          </div>
-          <div className="mt-10">
-            <AchievementsPanel />
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-};
+//       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+//         <div className="px-4 py-6 sm:px-0">
+//           <NFTGallery />
+//           <div className="mt-10">
+//             <LeaderBoard />
+//           </div>
+//           <div className="mt-10">
+//             <JobMarketplace />
+//           </div>
+//           <div className="mt-10">
+//             <AchievementsPanel />
+//           </div>
+//         </div>
+//       </main>
+//     </div>
+//   );
+// };
 
-export default Components;
+export default LeaderBoard;

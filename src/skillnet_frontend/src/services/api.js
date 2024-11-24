@@ -7,7 +7,7 @@ const skillnetActor = Actor.createActor(skillnetIdlFactory, {
     canisterId: process.env.CANISTER_ID 
 });
 
-export const api = {
+const api = {
     // Course Management
     listCourses: async () => {
       try {
@@ -73,3 +73,5 @@ export const api = {
       }
     }
 };
+
+export default api;

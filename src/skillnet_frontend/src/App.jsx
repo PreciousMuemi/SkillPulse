@@ -137,7 +137,7 @@ function App() {
               <Navigate to="/" />
             )}
           />
-          <Route path="/archievements" element=
+          <Route path="/achievements" element=
             {isAuthenticated ? (
               <AchievementsPanel
                 backendActor={backendActor}
@@ -147,7 +147,7 @@ function App() {
               <Navigate to="/" />
             )}
           />
-          <Route path="/job-market" element=
+          <Route path="/jobs" element=
             {isAuthenticated ? (
               <JobMarket 
                 backendActor={backendActor}

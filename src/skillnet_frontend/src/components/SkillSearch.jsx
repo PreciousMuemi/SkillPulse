@@ -9,7 +9,7 @@ import {
 } from '@chakra-ui/react';
 
 export const SkillSearch = ({ onSearch }) => {
-    const [skills, setSkills] = useState<string[]>([]);
+    const [skills, setSkills] = useState<string>([]);
     const [input, setInput] = useState('');
 
     const handleAddSkill = () => {
@@ -19,7 +19,7 @@ export const SkillSearch = ({ onSearch }) => {
         }
     };
 
-    const handleRemoveSkill = (skillToRemove: string) => {
+    const handleRemoveSkill = (skillToRemove) => {
         setSkills(skills.filter(skill => skill !== skillToRemove));
     };
 

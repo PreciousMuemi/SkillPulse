@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getUserNFTs } from '../services/api';
+import api from '../services/api';
 import { useAuth } from './AuthContext';
+
+const getUserNFTs = api.getUserNFTs;
 
 const Card = ({ children, className }) => (
   <div className={`bg-white rounded-xl shadow-lg p-6 ${className}`}>

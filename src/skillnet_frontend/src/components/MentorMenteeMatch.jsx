@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MentorList } from './MentorList';
 import { SkillSearch } from './SkillSearch';
 import { useWallet } from './WalletConnection';
-import { api } from '../services/api';
+import api from '../services/api';
 
 const MentorMenteeMatch = () => {
     const [mentors, setMentors] = useState([]);
