@@ -1,69 +1,63 @@
 import React from 'react';
-import {
-    SimpleGrid,
-    Box,
-    Text,
-    Badge,
-    Avatar,
-    VStack,
-    HStack,
-    Button,
-    Stack,
-    Tag,
-    Heading
-} from '@chakra-ui/react';
 
 export const MentorList = ({ mentors }) => {
     return (
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6} w="full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
             {mentors.map((mentor) => (
-                <Box
+                <div
                     key={mentor.userId.toString()}
-                    p={6}
-                    borderWidth="1px"
-                    borderRadius="lg"
-                    shadow="sm"
+                    className="p-6 border rounded-lg shadow-sm"
                 >
-                    <VStack align="start" spacing={4}>
-                        <HStack>
-                            <Avatar size="lg" />
-                            <VStack align="start" spacing={1}>
-                                <Text fontWeight="bold" fontSize="lg">
+                    <div className="flex flex-col space-y-4">
+                        <div className="flex items-start space-x-4">
+                            <div className="w-16 h-16 bg-gray-200 rounded-full flex-shrink-0"></div>
+                            <div className="flex flex-col">
+                                <span className="font-bold text-lg">
                                     {mentor.userId.toString().slice(0, 8)}...
-                                </Text>
-                                <Badge colorScheme="green">
+                                </span>
+                                <span className="text-sm text-green-600 bg-green-100 px-2 py-1 rounded">
                                     {mentor.experience_years} years experience
-                                </Badge>
-                            </VStack>
-                        </HStack>
-                        <HStack wrap="wrap">
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
                             {mentor.skills.map((skill) => (
-                                <Badge key={skill} colorScheme="blue">{skill}</Badge>
+                                <span
+                                    key={skill}
+                                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded-full"
+                                >
+                                    {skill}
+                                </span>
                             ))}
-                        </HStack>
-                        <Button colorScheme="blue" size="sm" w="full">
+                        </div>
+                        <button className="w-full px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">
                             Schedule Session
-                        </Button>
-                    </VStack>
-                </Box>
+                        </button>
+                    </div>
+                </div>
             ))}
-        </SimpleGrid>
+        </div>
     );
 };
 
 export const MentorCard = ({ mentor }) => (
-    <Box p={5} shadow="md" borderWidth="1px">
-        <Heading size="md">{mentor.userId.toString().slice(0, 8)}...</Heading>
-        <Text>Experience: {mentor.experience_years} years</Text>
-        <Text>Rating: {mentor.rating}/5</Text>
-        <Text>Availability: {mentor.availability.join(", ")}</Text>
-        <Text>Timezone: {mentor.timezone}</Text>
-        <Stack direction="row" wrap="wrap">
-            {mentor.skills.map(skill => (
-                <Tag key={skill}>
+    <div className="p-5 border rounded shadow-md">
+        <h3 className="text-lg font-bold mb-2">
+            {mentor.userId.toString().slice(0, 8)}...
+        </h3>
+        <p className="text-sm mb-1">Experience: {mentor.experience_years} years</p>
+        <p className="text-sm mb-1">Rating: {mentor.rating}/5</p>
+        <p className="text-sm mb-1">Availability: {mentor.availability.join(', ')}</p>
+        <p className="text-sm mb-3">Timezone: {mentor.timezone}</p>
+        <div className="flex flex-wrap gap-2">
+            {mentor.skills.map((skill) => (
+                <span
+                    key={skill}
+                    className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-full"
+                >
                     {skill}
-                </Tag>
+                </span>
             ))}
-        </Stack>
-    </Box>
+        </div>
+    </div>
 );

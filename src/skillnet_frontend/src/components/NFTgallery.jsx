@@ -64,17 +64,7 @@ function NFTGallery() {
       }
     }
     fetchNFTs();
-  }, [isAuthenticated]);
-
-  if (!isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-[#6A9C89]">
-        <Card>
-          <p className="text-[#16423C] font-semibold">Please log in to view your NFT gallery.</p>
-        </Card>
-      </div>
-    );
-  }
+  }, [isAuthenticated]);  // Re-run effect when isAuthenticated changes
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#16423C] to-[#6A9C89] text-white">

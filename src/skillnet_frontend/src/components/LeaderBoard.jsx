@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Briefcase, Award, TrendingUp, BookOpen } from 'lucide-react';
 import Header from './Header';
-
 // Dummy data generators
 const generateDummyNFTs = (count) => {
   const rarities = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'];

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Bell, Book, Users, Award, Calendar } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useUser } from './UserContext';
@@ -6,40 +7,71 @@ import Header from './Header';
 import { blobToPrincipal } from '../utils/principal';
 import { skillnet_backend } from '../../../declarations/skillnet_backend';
 
+// Define course categories
 const courseCategories = [
   { id: 'softSkills', name: 'Soft Skills', icon: '🗣️' },
   { id: 'computing', name: 'Computing', icon: '💻' },
   { id: 'dataScience', name: 'Data Science', icon: '📊' },
   { id: 'design', name: 'Design', icon: '🎨' },
   { id: 'business', name: 'Business', icon: '💼' },
-  { id: 'languages', name: 'Languages', icon: '🌐' },
+  { id: 'languages', name: 'Languages', icon: '🌐' }
 ];
 
-const dummyCourses = [
-  { id: 1, title: "Effective Communication", description: "Master the art of clear and impactful communication", category: "softSkills", duration: "4 weeks" },
-  { id: 2, title: "Leadership Fundamentals", description: "Develop essential leadership skills for the modern workplace", category: "softSkills", duration: "6 weeks" },
-  { id: 3, title: "Time Management Mastery", description: "Learn techniques to boost productivity and manage time effectively", category: "softSkills", duration: "3 weeks" },
-  { id: 4, title: "Introduction to Python", description: "Learn the basics of Python programming", category: "computing", duration: "8 weeks" },
-  { id: 5, title: "Web Development Bootcamp", description: "Comprehensive course on full-stack web development", category: "computing", duration: "12 weeks" },
-  { id: 6, title: "Mobile App Development with React Native", description: "Build cross-platform mobile apps", category: "computing", duration: "10 weeks" },
-  { id: 7, title: "Data Analysis with Python", description: "Learn to analyze data using Python and popular libraries", category: "dataScience", duration: "8 weeks" },
-  { id: 8, title: "Machine Learning Fundamentals", description: "Introduction to machine learning algorithms and applications", category: "dataScience", duration: "10 weeks" },
-  { id: 9, title: "UI/UX Design Principles", description: "Master the fundamentals of user interface and user experience design", category: "design", duration: "6 weeks" },
-  { id: 10, title: "Graphic Design for Beginners", description: "Learn the basics of graphic design and visual communication", category: "design", duration: "5 weeks" },
-  { id: 11, title: "Entrepreneurship 101", description: "Learn the fundamentals of starting and running a business", category: "business", duration: "8 weeks" },
-  { id: 12, title: "Digital Marketing Essentials", description: "Master the core concepts of digital marketing", category: "business", duration: "6 weeks" },
-  { id: 13, title: "Spanish for Beginners", description: "Start your journey to Spanish fluency", category: "languages", duration: "10 weeks" },
-  { id: 14, title: "Mandarin Chinese Basics", description: "Learn the fundamentals of Mandarin Chinese", category: "languages", duration: "12 weeks" },
-];
+// Sample courses by category
+const coursesByCategory = {
+  softSkills: [
+    {
+      id: 'communication',
+      title: 'Effective Communication Skills',
+      description: 'Improve your communication skills in personal and professional settings',
+      duration: '4 weeks',
+      price: '5 SKN',
+      mentorPrice: '4 SKN',
+      modules: [{ id: 1, title: 'Verbal Communication', duration: '2 weeks', completed: false }]
+    }
+  ],
+  computing: [
+    {
+      id: 'web-dev',
+      title: 'Web Development Fundamentals',
+      description: 'Complete beginner course covering HTML, CSS, and JavaScript basics',
+      duration: '8 weeks',
+      price: '10 SKN',
+      mentorPrice: '8 SKN',
+      modules: [{ id: 1, title: 'HTML Basics', duration: '2 weeks', completed: false }]
+    }
+  ],
+  dataScience: [
+    {
+      id: 'intro-ds',
+      title: 'Introduction to Data Science',
+      description: 'Learn the fundamentals of Data Science including Python, Pandas, and data visualization',
+      duration: '6 weeks',
+      price: '12 SKN',
+      mentorPrice: '10 SKN',
+      modules: [{ id: 1, title: 'Python Basics', duration: '2 weeks', completed: false }]
+    }
+  ],
+  // Add more categories and courses here...
+};
 
-const Dashboard = ({ onLogout }) => {
-  const [selectedCategories, setSelectedCategories] = useState([]);
+const Dashboard = () => {
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [userProfile, setUserProfile] = useState({
     principal: '',
     xp: 0,
     walletBalance: 0
   });
   const [principalId, setPrincipalId] = useState('');
+  const [activeTab, setActiveTab] = useState('courses');
+  const [showMentorRequest, setShowMentorRequest] = useState(false);
+  const [mentorForm, setMentorForm] = useState({
+    subject: '',
+    timezone: '',
+    preferredTime: '',
+    frequency: '',
+    level: ''
+  });
 
   useEffect(() => {
     fetchUserProfile();
@@ -70,19 +102,34 @@ const Dashboard = ({ onLogout }) => {
     );
   };
 
-  const filteredCourses = selectedCategories.length > 0
-    ? dummyCourses.filter(course => selectedCategories.includes(course.category))
-    : dummyCourses;
+  const handleMentorRequest = (e) => {
+    e.preventDefault();
+    setShowMentorRequest(false);
+    alert('Mentor matched! Check your notifications for details.');
+  };
 
-  const handleEnroll = async (courseId) => {
-    try {
-      const result = await skillnet_backend.enrollInCourse(courseId);
-      if (result) {
-        fetchUserProfile();
-      }
-    } catch (error) {
-      console.error('Error enrolling in course:', error);
-    }
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+  };
+
+  // Display courses for the selected category
+  const displayCourses = () => {
+    const courses = coursesByCategory[selectedCategory] || [];
+    return courses.map(course => (
+      <div key={course.id} className="bg-white shadow rounded-lg p-4 space-y-4">
+        <h3 className="text-lg font-bold">{course.title}</h3>
+        <p>{course.description}</p>
+        <p><strong>Duration:</strong> {course.duration}</p>
+        <p><strong>Price:</strong> {course.price}</p>
+        <p><strong>Mentor Price:</strong> {course.mentorPrice}</p>
+        <button className="px-4 py-2 bg-green-500 text-white rounded">Start Course</button>
+      </div>
+    ));
+  };
+
+  // Handle category selection
+  const handleCategorySelection = (category) => {
+    setActiveTab(category);
   };
 
   return (
@@ -91,6 +138,7 @@ const Dashboard = ({ onLogout }) => {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">Welcome back, {userProfile.principal || 'User'}!</h1>
+
           <div className="bg-white overflow-hidden shadow rounded-lg divide-y divide-gray-200 mb-6">
             <div className="px-4 py-5 sm:p-6">
               <h2 className="text-lg font-medium text-gray-900">Your Progress</h2>
@@ -114,39 +162,86 @@ const Dashboard = ({ onLogout }) => {
             </div>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Choose Your Learning Path</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-            {courseCategories.map((category) => (
+          {/* Tabs for Courses, Mentoring, Certifications */}
+          <div className="border-b border-gray-200">
+            <nav className="flex space-x-8 py-4">
               <button
-                key={category.id}
-                onClick={() => toggleCategory(category.id)}
-                className={`p-4 rounded-lg shadow-md flex flex-col items-center justify-center transition-colors duration-200 ${
-                  selectedCategories.includes(category.id)
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white text-gray-800 hover:bg-gray-100'
-                }`}
+                onClick={() => setActiveTab('courses')}
+                className={`${
+                  activeTab === 'courses'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
               >
-                <span className="text-3xl mb-2">{category.icon}</span>
-                <span className="text-sm font-medium">{category.name}</span>
+                <Book className="w-4 h-4 mr-2" />
+                Courses
               </button>
-            ))}
+              <button
+                onClick={() => setActiveTab('mentoring')}
+                className={`${
+                  activeTab === 'mentoring'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Mentoring
+              </button>
+              <button
+                onClick={() => setActiveTab('certifications')}
+                className={`${
+                  activeTab === 'certifications'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+              >
+                <Award className="w-4 h-4 mr-2" />
+                Certifications
+              </button>
+            </nav>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Available Courses</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredCourses.map((course) => (
-              <div key={course.id} className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-bold mb-2">{course.title}</h3>
-                <p className="text-sm text-gray-600 mb-4">{course.description}</p>
-                <p className="text-sm font-medium text-gray-800 mb-2">Duration: {course.duration}</p>
+          <div className="mt-6">
+            {/* Course Tab Content */}
+            {activeTab === 'courses' && displayCourses()}
+            {/* Mentoring Tab Content */}
+            {activeTab === 'mentoring' && (
+              <div>
                 <button
-                  onClick={() => handleEnroll(course.id)}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm"
+                  onClick={() => setShowMentorRequest(true)}
+                  className="bg-blue-500 text-white px-4 py-2 rounded"
                 >
-                  Enroll
+                  Request a Mentor
                 </button>
+
+                {showMentorRequest && (
+                  <div className="mt-4">
+                    <form onSubmit={handleMentorRequest}>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Subject</label>
+                          <input
+                            type="text"
+                            className="mt-1 p-2 border rounded w-full"
+                            value={mentorForm.subject}
+                            onChange={e => setMentorForm({ ...mentorForm, subject: e.target.value })}
+                          />
+                        </div>
+                        {/* Additional fields for timezone, preferred time, etc. */}
+                        <button
+                          type="submit"
+                          className="bg-green-500 text-white px-4 py-2 rounded mt-4"
+                        >
+                          Submit Request
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
               </div>
-            ))}
+            )}
+            {/* Certifications Tab Content */}
+            {activeTab === 'certifications' && <div>Certifications content will go here</div>}
           </div>
         </div>
       </main>

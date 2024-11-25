@@ -1,26 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import Header from './Header';
 
-const AchievementsPanel = ({ achievements }) => {
-
-  const generateDummyAchievements = (count) => {
-    const achievementNames = ['Blockchain Beginner', 'Smart Contract Wizard', 'Crypto Trader', 'NFT Creator', 'DeFi Expert'];
-    const descriptions = [
-      'Completed the introduction to blockchain course',
-      'Deployed your first smart contract',
-      'Made your first successful crypto trade',
-      'Created and minted your first NFT',
-      'Participated in a DeFi liquidity pool'
-    ];
-  
-    return Array.from({ length: count }, (_, i) => ({
-      id: i + 1,
-      name: achievementNames[i % achievementNames.length],
-      description: descriptions[i % descriptions.length],
-      icon: `/api/placeholder/50/50?text=${encodeURIComponent(achievementNames[i % achievementNames.length])}`,
-    }));
-  };
-  
+const AchievementsPanel = ({ achievements = [] }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -47,4 +29,5 @@ const AchievementsPanel = ({ achievements }) => {
     </motion.div>
   );
 };
+
 export default AchievementsPanel;
