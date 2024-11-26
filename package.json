@@ -11,20 +11,29 @@
     "start": "npm start --workspaces --if-present",
     "test": "npm test --workspaces --if-present"
   },
+  "private": true,
   "type": "module",
   "workspaces": [
     "src/skillnet_frontend"
   ],
   "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.13",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
     "vite": "^5.4.10"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.2.0",
+    "@dfinity/agent": "^2.1.3",
+    "@dfinity/candid": "^2.1.3",
     "@emotion/react": "^11.13.5",
     "@emotion/styled": "^11.13.5",
-    "framer-motion": "^11.11.17"
+    "axios": "^1.7.7",
+    "borc": "^3.0.0",
+    "buffer": "^6.0.3",
+    "framer-motion": "^11.11.17",
+    "moment": "^2.30.1",
+    "simple-cbor": "^0.4.1"
   }
 }

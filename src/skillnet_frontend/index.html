@@ -12,6 +12,19 @@
   <title>SkillNet</title>
   <base href="/" />
   <link rel="icon" href="./dist/assets/skillnet-116bc389.jpg" />
+
+  <!-- Import Map Script -->
+  <script type="importmap">
+    {
+      "imports": {
+        "@dfinity/candid": "./node_modules/@dfinity/candid/lib/esm/index.js",
+      "@dfinity/principal": "./node_modules/@dfinity/principal/lib/esm/index.js",
+      "@dfinity/agent": "./node_modules/@dfinity/agent/lib/esm/index.js",
+      "borc": "/node_modules/borc/dist/index.min.js",
+      "buffer": "./node_modules/buffer/index.js"
+      }
+    }
+  </script>
 </head>
 
 <body>
@@ -20,4 +33,3 @@
 </body>
 
 </html>
-

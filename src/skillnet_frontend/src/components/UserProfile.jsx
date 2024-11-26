@@ -1,86 +1,102 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Header from './Header';
+import { useUser } from './UserContext';
+import api from '../services/api';
+import { skillnet_backend } from '../../../declarations/skillnet_backend';
 
-const UserProfile = ({ backendActor }) => {
-  const [userProfile, setUserProfile] = useState(null);
+const UserProfile = () => {
+  const { user } = useUser();
+  const [profile, setProfile] = useState({
+    principal: '',
+    xp: 0,
+    skills: [],
+    mentorStatus: '',
+    certifications: []
+  });
+  const [completedCourses, setCompletedCourses] = useState([]);
+  const [badges, setBadges] = useState([]);
 
   useEffect(() => {
     fetchUserProfile();
+    fetchUserAchievements();
   }, []);
 
   const fetchUserProfile = async () => {
-    // Fetch user profile from the backend
-    // const result = await backendActor.getUserProfile();
-    // setUserProfile(result);
+    try {
+      const userInfo = await api.getUser();
+      setProfile(userInfo);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
   };
 
-  if (userProfile) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-xl font-semibold text-gray-700">Loading...</div>
-      </div>
-    );
-  }
+  const fetchUserAchievements = async () => {
+    try {
+      const userNFTs = await api.getUserNFTs();
+      setBadges(userNFTs);
+      
+      const courses = await api.listCourses();
+      const completed = courses.filter(course => course.status === 'completed');
+      setCompletedCourses(completed);
+    } catch (error) {
+      console.error('Error fetching achievements:', error);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6 flex flex-col justify-center sm:py-12">
-      <Header />
-      <div className="relative py-3 sm:max-w-xl sm:mx-auto">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-600 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
-        <div className="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
-          <div className="max-w-md mx-auto">
-            <div className="flex flex-col items-center">
-              <h1 className="text-3xl font-bold text-gray-800">User Profile</h1>
-              <img 
-                src="/profile-placeholder.png" 
-                alt="Profile" 
-                className="w-24 h-24 rounded-full mt-4"
-              />
-            </div>
-            <div className="divide-y divide-gray-200 mt-6">
-              <div className="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
-                <p><strong>Username:</strong> {userProfile}</p>
-                <p><strong>Level:</strong> {userProfile}</p>
-                <p><strong>XP:</strong> {userProfile}</p>
-                <p><strong>Wallet Balance:</strong> {userProfile} SKN</p>
-                <div>
-                  <strong>Skills:</strong>
-                  <ul className="list-disc pl-5 mt-2">
-                    {/* {userProfile.ap((skill, index) => (
-                      <li key={index}>{skill}</li>
-                    ))} */}
-                  </ul>
-                </div>
-                <div>
-                  <strong>Completed Courses:</strong>
-                  <ul className="list-disc pl-5 mt-2">
-                    {/* {userProfile.completedCourses.map((course, index) => (
-                      <li key={index}>{course}</li>
-                    ))} */}
-                  </ul>
-                </div>
-              </div>
-              <div className="pt-6 text-base leading-6 font-bold sm:text-lg sm:leading-7">
-                <p>Your Progress</p>
-                <div className="mt-2 relative pt-1">
-                  <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(userProfile % 100) / 100 * 100}%` }}
-                      transition={{ duration: 1 }}
-                      className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
-              <button 
-                className="mt-6 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition duration-300"
-              >
-                Edit Profile
-              </button>
+    <div className="space-y-8">
+      <div className="bg-white shadow rounded-lg p-6">
+        <h2 className="text-2xl font-bold mb-4">User Profile</h2>
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-medium">Principal ID</h3>
+            <p className="text-gray-600">{profile.principal}</p>
+          </div>
+          <div>
+            <h3 className="text-lg font-medium">Experience Points</h3>
+            <p className="text-gray-600">{profile.xp} XP</p>
+          </div>
+          <div>
+            <h3 className="text-lg font-medium">Skills</h3>
+            <div className="flex flex-wrap gap-2">
+              {profile.skills.map((skill, index) => (
+                <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                  {skill}
+                </span>
+              ))}
             </div>
           </div>
+          <div>
+            <h3 className="text-lg font-medium">Mentor Status</h3>
+            <p className="text-gray-600">{profile.mentorStatus}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white shadow rounded-lg p-6">
+        <h3 className="text-xl font-bold mb-4">Completed Courses</h3>
+        <div className="grid grid-cols-2 gap-4">
+          {completedCourses.map((course) => (
+            <div key={course.id} className="bg-green-50 p-4 rounded-lg">
+              <h4 className="font-medium">{course.title}</h4>
+              <p className="text-sm text-gray-600">Completed on: {course.completionDate}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white shadow rounded-lg p-6">
+        <h3 className="text-xl font-bold mb-4">Badges Earned</h3>
+        <div className="grid grid-cols-4 gap-4">
+          {badges.map((badge) => (
+            <div key={badge.id} className="text-center">
+              <div className="w-16 h-16 mx-auto mb-2">
+                <img src={badge.image} alt={badge.name} className="w-full h-full object-contain" />
+              </div>
+              <p className="text-sm font-medium">{badge.name}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

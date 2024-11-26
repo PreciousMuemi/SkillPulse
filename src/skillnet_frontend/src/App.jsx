@@ -35,7 +35,11 @@ function App() {
 
     initAuth();
   }, []);
-
+  useEffect(() => {
+    console.log('App mounting');
+    // Log any initial state or props
+  }, []);
+  
   const handleAuthenticated = async (client) => {
     setIsAuthenticated(true);
     const identity = client.getIdentity();

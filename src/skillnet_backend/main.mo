@@ -8,20 +8,37 @@ import Result "mo:base/Result";
 import Array "mo:base/Array";
 
 actor SkillNet {
-    // Type definitions inside actor
-    type User = {
-        userId: Principal;
-        skills: [Text];
-        completedCourses: [Text];
-        tokens: Nat;
-        nfts: [Text];
-        mentor: Bool;
-        experience_years: Nat;
-        rating: Float;
-        availability: [Text];
-        timezone: Text;
-    };
-
+    // Enhanced User type
+type User = {
+    userId: Principal;
+    skills: [Text];
+    completedCourses: [Text];
+    tokens: Nat;
+    nfts: [Text];
+    mentor: Bool;
+    experience_years: Nat;
+    rating: Float;
+    availability: [Text];
+    timezone: Text;
+    profile: UserProfile;
+    verificationStatus: Text;
+    lastActive: Time.Time;
+};
+type UserProfile = {
+    bio: Text;
+    education: [Text];
+    certifications: [Text];
+    socialLinks: [Text];
+    preferredLanguages: [Text];
+};
+type MentorApplication = {
+    userId: Principal;
+    submissionDate: Time.Time;
+    qualifications: [Text];
+    specializations: [Text];
+    testScores: [(Text, Nat)];
+    status: Text; // "pending", "approved", "rejected"
+};
     type MentorMatch = {
         mentor_id: Text;
         similarity: Float;
@@ -99,27 +116,31 @@ actor SkillNet {
     };
 
     // User Management
-    public shared(msg) func createUser() : async Result.Result<Text, Text> {
-        switch (users.get(msg.caller)) {
-            case (?_) { #err("User already exists") };
-            case null {
-                let newUser : User = {
-                    userId = msg.caller;
-                    skills = [];
-                    completedCourses = [];
-                    tokens = 0;
-                    nfts = [];
-                    mentor = false;
-                    experience_years = 0;
-                    rating = 0.0;
-                    availability = [];
-                    timezone = "UTC";
-                };
-                users.put(msg.caller, newUser);
-                #ok("User created successfully")
+  public shared(msg) func createUser(profile: UserProfile) : async Result.Result<Text, Text> {
+    switch (users.get(msg.caller)) {
+        case (?_) { #err("User already exists") };
+        case null {
+            let newUser : User = {
+                userId = msg.caller;
+                skills = [];
+                completedCourses = [];
+                tokens = 0;
+                nfts = [];
+                mentor = false;
+                experience_years = 0;
+                rating = 0.0;
+                availability = [];
+                timezone = "UTC";
+                profile = profile;
+                verificationStatus = "pending";
+                lastActive = Time.now();
             };
+            users.put(msg.caller, newUser);
+            #ok("User created successfully")
         };
     };
+};
+
 
     public shared(msg) func getUser() : async Result.Result<User, Text> {
         getUserOrFail(msg.caller)
@@ -199,18 +220,32 @@ actor SkillNet {
         };
     };
 
-    public shared(msg) func applyForMentor() : async Result.Result<Text, Text> {
-        switch (getUserOrFail(msg.caller)) {
-            case (#ok(user)) {
-                if (user.completedCourses.size() < 3) {
-                    return #err("User must complete at least 3 courses before applying for mentorship");
-                };
-                mentorApplications := Array.append(mentorApplications, [msg.caller]);
-                #ok("Mentor application submitted successfully")
+    public shared(msg) func applyForMentor(application: MentorApplication) : async Result.Result<Text, Text> {
+    switch (getUserOrFail(msg.caller)) {
+        case (#ok(user)) {
+            if (user.completedCourses.size() < 3) {
+                return #err("User must complete at least 3 courses before applying for mentorship");
             };
-            case (#err(e)) { #err(e) };
+            
+            // Validate qualifications
+            if (application.qualifications.size() < 2) {
+                return #err("Insufficient qualifications");
+            };
+
+            // Check test scores
+            let minRequiredScore = 80;
+            for ((_, score) in application.testScores.vals()) {
+                if (score < minRequiredScore) {
+                    return #err("Did not meet minimum test score requirements");
+                };
+            };
+
+            mentorApplications := Array.append(mentorApplications, [msg.caller]);
+            #ok("Mentor application submitted successfully")
         };
+        case (#err(e)) { #err(e) };
     };
+};
 
     public shared(msg) func approveMentor(userId: Principal) : async Result.Result<Text, Text> {
         switch (getUserOrFail(userId)) {
@@ -236,7 +271,20 @@ actor SkillNet {
             case (_, #err(e)) { #err(e) };
         };
     };
-
+public shared(msg) func verifyUserIdentity(documents: [Text]) : async Result.Result<Text, Text> {
+    switch (getUserOrFail(msg.caller)) {
+        case (#ok(user)) {
+            let updatedUser = {
+                user with
+                verificationStatus = "verified";
+                lastActive = Time.now();
+            };
+            users.put(msg.caller, updatedUser);
+            #ok("User verification completed")
+        };
+        case (#err(e)) { #err(e) };
+    };
+};
     public shared(msg) func completeModule(courseId: Text, moduleId: Text) : async Result.Result<Text, Text> {
         switch (getUserOrFail(msg.caller), getCourseOrFail(courseId)) {
             case (#ok(user), #ok(course)) {
