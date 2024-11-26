@@ -9,7 +9,7 @@ import Dashboard from './components/Dashboard';
 import CourseDetail from './components/courseDetail';
 import UserProfile from './components/UserProfile';
 import WalletConnection from './components/WalletConnection';
-import Footer from './components/Footer';
+// import Footer from './components/Footer';
 import Header from './components/Header';
 import MentorMenteeMatch from './components/MentorMenteeMatch';
 import LeaderBoard from './components/LeaderBoard';
@@ -161,7 +161,7 @@ function App() {
             )}
           />
         </Routes>
-        <Footer />
+        {/* <Footer /> */}
       </div>
     </Router>
   );
