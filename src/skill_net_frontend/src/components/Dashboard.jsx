@@ -4,7 +4,7 @@ import { Bell, Book, Users, Award, Hash, Calendar, ChevronRight, LogOut, Activit
 import { useNavigate } from 'react-router-dom';
 
 import Logo from './skillnet.jpg';
-import MentorProgram from './MentorProgram';
+// import MentorProgram from './MentorProgram';
 import MentorRequestForm from './MentorRequestForm';
 import Header from './Header';
 import { blobToPrincipal } from '../utils/principal';
@@ -28,6 +28,12 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
 
+
+  const courses = [
+    { id: 'js-course', name: 'JavaScript for Beginners', description: 'A comprehensive course to learn JavaScript from scratch.', participants: 320 },
+    { id: 'react-course', name: 'Mastering React', description: 'An advanced course for mastering React and building real-world applications.', participants: 220 }
+  ];
+  
   const communities = [
     { id: 'js-community', name: 'JavaScript Enthusiasts', description: 'A community for JavaScript learners and experts.', members: 1240 },
     { id: 'react-community', name: 'React Developers', description: 'A community for ReactJS enthusiasts to share knowledge and tips.', members: 980 }
@@ -183,13 +189,13 @@ const Dashboard = () => {
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-2xl flex flex-col"
+        className="w-64 bg-[#040622] text-white shadow-xl flex flex-col"
       >
         <div className="p-6 text-center text-3xl font-bold tracking-wider border-b border-gray-700 flex items-center justify-center">
         <div className="flex items-center">
           <img src={Logo} alt="App Logo" className="h-10 w-10 mr-2" />
         </div>
-          SkillNet
+          SkillPulse
         </div>
         
         <nav className="mt-6 space-y-2 flex-grow px-4">
@@ -290,7 +296,7 @@ const Dashboard = () => {
                 exit={{ opacity: 0, y: 50 }}
                 className="space-y-6"
               >
-                <MentorProgram />
+                {/* <MentorProgram /> */}
                 
                 {/* Mentor Application Section */}
                 <div className="flex justify-between items-center">
@@ -318,6 +324,7 @@ const Dashboard = () => {
                     </div>
                   )}
                 </div>
+                
 
                 {mentorApplication && (
                   <motion.div 
@@ -331,6 +338,25 @@ const Dashboard = () => {
                 )}
               </motion.div>
             )}
+{activeTab === 'courses' && (
+  <div className="space-y-6">
+    <h2 className="text-2xl font-semibold text-gray-800">Courses</h2>
+    <ul className="space-y-4">
+      {courses.map(course => (
+        <li key={course.id} className="border bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-200 ease-in-out">
+          <h3 className="text-xl font-semibold text-indigo-600">{course.name}</h3>
+          <p className="text-gray-600 mt-2">{course.description}</p>
+          <p className="text-sm text-gray-500 mt-2">Participants: {course.participants}</p>
+          <div className="mt-4">
+            <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors duration-200">
+              View Details
+            </button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
 
             {activeTab === 'communities' && (
               <motion.div 

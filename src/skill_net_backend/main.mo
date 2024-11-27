@@ -257,13 +257,12 @@ type MentorApplication = {
             case (#err(e)) { #err(e) };
         };
     };
-
-    public shared func matchMentor(request: MentorRequest) : async Result.Result<MentorMatch, Text> {
+public shared func matchMentor(request: MentorRequest) : async Result.Result<MentorMatch, Text> {
         let mentors = await getAllMentors();
         
         // Filter mentors based on subject expertise
         let potentialMentors = Array.filter(mentors, func(mentor: Mentor) : Bool {
-            return mentor.expertise.contains(request.subject);
+            mentor.expertise.contains(request.subject)
         });
         
         // Score each mentor based on multiple criteria
@@ -292,14 +291,14 @@ type MentorApplication = {
         
         // Sort mentors by score
         let sortedMentors = Array.sort(scoredMentors, func(a: (Mentor, Float), b: (Mentor, Float)) : Bool {
-            return a.1 > b.1;
+            a.1 > b.1
         });
         
         switch (Array.get(sortedMentors, 0)) {
-            case (?bestMatch) {
+            case (?(bestMatch, score)) {
                 let mentorMatch : MentorMatch = {
-                    mentorId = bestMatch.0.id;
-                    matchScore = bestMatch.1;
+                    mentorId = debug_show(bestMatch.id);
+                    matchScore = score;
                     requestId = generateRequestId();
                     timestamp = Time.now();
                 };
@@ -310,6 +309,59 @@ type MentorApplication = {
             };
         };
     };
+    // public shared func matchMentor(request: MentorRequest) : async Result.Result<MentorMatch, Text> {
+    //     let mentors = await getAllMentors();
+        
+    //     // Filter mentors based on subject expertise
+    //     let potentialMentors = Array.filter(mentors, func(mentor: Mentor) : Bool {
+    //         return mentor.expertise.contains(request.subject);
+    //     });
+        
+    //     // Score each mentor based on multiple criteria
+    //     let scoredMentors = Array.map(potentialMentors, func(mentor: Mentor) : (Mentor, Float) {
+    //         var score : Float = 0;
+            
+    //         // Match availability
+    //         let availabilityMatch = countMatchingAvailability(mentor.availability, request.availability);
+    //         score += Float.fromInt(availabilityMatch) * 0.3;
+            
+    //         // Match timezone
+    //         if (mentor.timezone == request.timezone) {
+    //             score += 0.2;
+    //         };
+            
+    //         // Match language preferences
+    //         if (mentor.preferredLanguage == request.preferredLanguage) {
+    //             score += 0.2;
+    //         };
+            
+    //         // Consider mentor rating
+    //         score += mentor.rating * 0.3;
+            
+    //         return (mentor, score);
+    //     });
+        
+    //     // Sort mentors by score
+    //     let sortedMentors = Array.sort(scoredMentors, func(a: (Mentor, Float), b: (Mentor, Float)) : Bool {
+    //         return a.1 > b.1;
+    //     });
+        
+    //     switch (Array.get(sortedMentors, 0)) {
+    //         case (?bestMatch) {
+    //             let mentorMatch : MentorMatch = {
+    //                 mentorId = bestMatch.0.id;
+    //                 matchScore = bestMatch.1;
+    //                 requestId = generateRequestId();
+    //                 timestamp = Time.now();
+    //             };
+    //             return #ok(mentorMatch);
+    //         };
+    //         case null {
+    //             return #err("No suitable mentor found");
+    //         };
+    //     };
+    // };
+
 public shared(msg) func verifyUserIdentity(documents: [Text]) : async Result.Result<Text, Text> {
     switch (getUserOrFail(msg.caller)) {
         case (#ok(user)) {

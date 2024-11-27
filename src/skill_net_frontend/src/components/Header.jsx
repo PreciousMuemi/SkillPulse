@@ -31,7 +31,7 @@ function Header() {
   };
 
   return (
-    <header className="bg-[#16423C] shadow-lg">
+    <header className="bg-[#040622] shadow-lg">
       <nav className="container mx-auto px-4 flex items-center justify-between h-16">
         {/* Logo and App Name */}
         <div className="flex items-center">
