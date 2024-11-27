@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { AuthClient } from '@dfinity/auth-client';
-import { HttpAgent } from '@dfinity/agent';
+import { Actor, HttpAgent } from '@dfinity/agent';
+import { idlFactory as backendIdlFactory } from "../../declarations/skill_net_backend";
+import { canisterId as backendCanisterId } from "../../declarations/skill_net_backend";
+import { skill_net_backend } from "../../declarations/skill_net_backend";
 
 // Import components
 import LandingPage from './components/LandingPage';
@@ -44,7 +47,7 @@ function App() {
     setIsAuthenticated(true);
     const identity = client.getIdentity();
     const agent = new HttpAgent({ identity });
-    const actor = await window.Actor.createActor(backendIdlFactory, {
+    const actor = Actor.createActor(backendIdlFactory, {
       agent,
       canisterId: backendCanisterId,
     });

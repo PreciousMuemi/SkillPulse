@@ -1,18 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Bell, Book, Users, Award, Calendar, Hash, ChevronRight, LogOut, User } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Bell, Book, Users, Award, Hash, Calendar, ChevronRight, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useUser } from './UserContext';
 import MentorProgram from './MentorProgram';
-import UserProfile from './UserProfile';
 import Header from './Header';
 import { blobToPrincipal } from '../utils/principal';
 import { skill_net_backend } from '../../../declarations/skill_net_backend';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState(null);
   const [userProfile, setUserProfile] = useState({
     principal: '',
     xp: 0,
@@ -21,7 +17,7 @@ const Dashboard = () => {
   const [userType, setUserType] = useState('user');
   const [mentorApplication, setMentorApplication] = useState(null);
   const [principalId, setPrincipalId] = useState('');
-  const [activeTab, setActiveTab] = useState('courses');
+  const [activeTab, setActiveTab] = useState('mentoring');
   const [showMentorRequest, setShowMentorRequest] = useState(false);
   const [mentorForm, setMentorForm] = useState({
     subject: '',
@@ -44,139 +40,131 @@ const Dashboard = () => {
   ];
 
   const sidebarTabs = [
-    { id: 'courses', icon: Book, label: 'Courses' },
     { id: 'mentoring', icon: Users, label: 'Mentoring' },
-    { id: 'profile', icon: User, label: 'Profile' },
-    { id: 'certifications', icon: Award, label: 'Certifications' },
     { id: 'communities', icon: Hash, label: 'Communities' },
     { id: 'study-jams', icon: Calendar, label: 'Study Jams' }
   ];
 
   useEffect(() => {
     fetchUserProfile();
-    fetchMentorMatch();
   }, []);
 
   const fetchUserProfile = async () => {
     try {
-      const principalBlob = await skillnet_backend.whoami();
+      setLoading(true);
+      if (!skill_net_backend) {
+        throw new Error('Backend canister not initialized');
+      }
+  
+      const principalBlob = await skill_net_backend.whoami();
       const principalId = blobToPrincipal(principalBlob);
       setPrincipalId(principalId);
+  
+      const userResult = await skill_net_backend.getUser();
+      if ('ok' in userResult) {
+        const userInfo = userResult.ok;
+        setUserProfile({
+          principal: principalId,
 
-      const userInfo = await skill_net_backend.getUser(principalId);
-      setUserProfile({
-        principal: principalId,
-        xp: userInfo?.xp || 0,
-        walletBalance: userInfo?.walletBalance || 0
-      });
+          xp: userInfo.tokens || 0,
+          walletBalance: userInfo.tokens || 0
+        });
+      }
     } catch (error) {
       console.error('Error fetching user info:', error);
+    } finally {
+
+      setLoading(false);  // This ensures loading is set to false in all cases
     }
   };
 
   const handleMentorApplication = async () => {
     try {
-      const response = await skill_net_backend.applyForMentor();
-      if (response.ok) {
+      const mentorApplication = {
+        userId: principalId,
+        submissionDate: Date.now(),
+        qualifications: [], // Add relevant qualifications
+        specializations: [], // Add relevant specializations
+        testScores: [], // Add any test scores
+        status: "pending"
+      };
+  
+      const response = await skill_net_backend.applyForMentor(mentorApplication);
+      
+      if ('ok' in response) {
         setMentorApplication({ status: 'pending' });
+      } else {
+        console.error('Mentor application failed:', response.err);
       }
     } catch (error) {
       console.error('Error applying for mentor:', error);
     }
   };
-
-  const fetchMentorMatch = async () => {
-    try {
-      const response = await axios.post('http://127.0.0.1:5000/match_mentor', {
-        mentee_id: principalId,
-        desired_skills: [
-          { name: "python", level: "intermediate" },
-          { name: "web_development", level: "beginner" }
-        ]
-      });
-      
-      const topMentor = response.data.recommended_mentors[0];
-      setMentorMatch({
-        name: topMentor.mentor_id,
-        expertise: topMentor.mentor_id,
-        available: topMentor.availability.join(', '),
-        confidence: response.data.match_confidence
-      });
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching mentor match:', error);
-      setLoading(false);
-    }
-  };
+  const [mentorRequestLoading, setMentorRequestLoading] = useState(false);
+  const [mentorApplicationLoading, setMentorApplicationLoading] = useState(false);
+  const [showMentorRequest, setShowMentorRequest] = useState(false);
+  const [mentorMatch, setMentorMatch] = useState(null);
 
   const handleMentorRequest = async (formData) => {
     try {
-      setLoading(true);
-      const user = await skill_net_backend.getUser();
-      if (!user.ok) {
-        throw new Error('Please create a user profile first');
+      setMentorRequestLoading(true);
+      const result = await skill_net_backend.requestMentor(formData);
+      if (result) {
+        handleMentorMatchSuccess(result);
       }
-
-      const response = await axios.post('http://127.0.0.1:5000/match_mentor', {
-        mentee_id: principalId,
-        desired_skills: formData.skills,
-        timezone: formData.timezone,
-        preferred_time: formData.preferredTime
-      });
-
-      if (response.data.recommended_mentors.length > 0) {
-        setMentorMatch(response.data.recommended_mentors[0]);
-      }
+      setShowMentorRequest(false);
     } catch (error) {
       console.error('Error matching mentor:', error);
     } finally {
-      setLoading(false);
+      setMentorRequestLoading(false);
     }
+  };
+
+  const handleMentorMatchSuccess = (match) => {
+    setMentorMatch(match);
+    // Show success notification or update UI
   };
 
   const handleLogout = () => {
     navigate('/login');
   };
 
-  const MentorRequestForm = () => (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full">
-        <h3 className="text-lg font-bold mb-4">Request a Mentor</h3>
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          handleMentorRequest(mentorForm);
-        }} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Subject Area</label>
-            <input
-              type="text"
-              className="w-full rounded-md border-gray-300"
-              value={mentorForm.subject}
-              onChange={(e) => setMentorForm({...mentorForm, subject: e.target.value})}
-              required
-            />
-          </div>
-          <div className="flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={() => setShowMentorRequest(false)}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              Submit Request
-            </button>
-          </div>
-        </form>
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-blue-500"></div>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
+   
+      {showMentorRequest && (
+        <MentorRequestForm 
+        onClose={() => setShowMentorRequest(false)}
+        onSuccess={(match) => {
+          setMentorMatch(match);
+          setShowMentorRequest(false);
+        }}
+        />
+      )}
+
+      {mentorMatch && (
+        <div className="bg-green-50 border-l-4 border-green-500 p-4 mt-4">
+          <h3 className="text-lg font-medium text-green-800">Mentor Match Found!</h3>
+          <div className="mt-2">
+            <p>Match Score: {(mentorMatch.matchScore * 100).toFixed(1)}%</p>
+            <p>Request ID: {mentorMatch.requestId}</p>
+            <button 
+              className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              onClick={() => {/* Handle accepting match */}}
+            >
+              Accept Match
+            </button>
+          </div>
+        </div>
+      )}
     <div className="min-h-screen bg-gray-50 flex">
       <div className="w-64 bg-gray-900 text-white shadow-lg flex flex-col">
         <div className="p-4 text-center text-2xl font-bold tracking-wider bg-gray-800 border-b border-gray-700">
@@ -244,8 +232,6 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-  
-            {activeTab === 'profile' && <UserProfile />}
   
             {activeTab === 'mentoring' && (
               <div className="space-y-6">
@@ -327,5 +313,7 @@ const Dashboard = () => {
         </main>
       </div>
     </div>
-)}
+  );
+};
+
 export default Dashboard;

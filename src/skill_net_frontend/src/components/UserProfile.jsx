@@ -1,102 +1,281 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import Header from './Header';
-import { useUser } from './UserContext';
-import api from '../services/api';
-import { skill_net_backend } from '../../../declarations/skill_net_backend';
+import { Camera, Edit, User, Award, Book, Badge } from 'lucide-react';
+
+// Dummy images (replace with actual paths)
+const BACKGROUND_IMAGE = '../images/bg.jpg';
+const BADGE_IMAGE = '../images/badge1.jpg';
+const BADGE_IMAGE2 = '../images/badge2.jpg';
+const DEFAULT_PROFILE_PIC = '../images/bg.jpg';
 
 const UserProfile = () => {
   const [profile, setProfile] = useState({
+    username: '',
     principal: '',
     xp: 0,
     skills: [],
-    mentorStatus: '',
-    certifications: []
+    bio: '',
+    isMentor: false,
+    profilePic: DEFAULT_PROFILE_PIC
   });
+
   const [completedCourses, setCompletedCourses] = useState([]);
   const [badges, setBadges] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchUserProfile();
-    fetchUserAchievements();
+    setIsLoading(true);
+    // Fetch initial profile data or use dummy data
+    const initialProfile = {
+      username: 'skillmaster2024',
+      principal: 'x7h3d-dkf90-...',
+      xp: 1250,
+      skills: ['React', 'Blockchain', 'UI/UX'],
+      bio: 'Passionate about technology and continuous learning.',
+      isMentor: true,
+      profilePic: DEFAULT_PROFILE_PIC
+    };
+    setProfile(initialProfile);
+
+    // Dummy course and badge data
+    setCompletedCourses([
+      { 
+        id: 1, 
+        title: 'Advanced React Development', 
+        completionDate: '2024-01-15' 
+      },
+      { 
+        id: 2, 
+        title: 'Blockchain Fundamentals', 
+        completionDate: '2024-02-20' 
+      }
+    ]);
+
+    setBadges([
+      { 
+        id: 1, 
+        name: 'Blockchain Pioneer', 
+        image: BADGE_IMAGE 
+      },
+      { 
+        id: 2, 
+        name: 'React Master', 
+        image: BADGE_IMAGE2
+      }
+    ]);
+    setIsLoading(false);
   }, []);
-
-  const fetchUserProfile = async () => {
-    try {
-      const userInfo = await api.getUser();
-      setProfile(userInfo.principal, userInfo.xp, userInfo.skills, userInfo.mentorStatus, userInfo.certifications);
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-    }
+  const handleProfileUpdate = (field, value) => {
+    setProfile(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const fetchUserAchievements = async () => {
-    try {
-      const userNFTs = await api.getUserNFTs();
-      setBadges(userNFTs);
-      
-      const courses = await api.listCourses();
-      const completed = courses.filter(course => course.status === 'completed');
-      setCompletedCourses(completed);
-    } catch (error) {
-      console.error('Error fetching achievements:', error);
+  const handleProfilePicUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleProfileUpdate('profilePic', reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
-
   return (
-    <div className="space-y-8">
-      <Header />
-      <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-2xl font-bold mb-4">User Profile</h2>
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-lg font-medium">Principal ID</h3>
-            <p className="text-gray-600">{profile.principal}</p>
-          </div>
-          <div>
-            <h3 className="text-lg font-medium">Experience Points</h3>
-            <p className="text-gray-600">{profile.xp} XP</p>
-          </div>
-          <div>
-            <h3 className="text-lg font-medium">Skills</h3>
-            <div className="flex flex-wrap gap-2">
-              {profile.skills.map((skill, index) => (
-                <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
-                  {skill}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-lg font-medium">Mentor Status</h3>
-            <p className="text-gray-600">{profile.mentorStatus}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-xl font-bold mb-4">Completed Courses</h3>
-        <div className="grid grid-cols-2 gap-4">
-          {completedCourses.map((course) => (
-            <div key={course.id} className="bg-green-50 p-4 rounded-lg">
-              <h4 className="font-medium">{course.title}</h4>
-              <p className="text-sm text-gray-600">Completed on: {course.completionDate}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-xl font-bold mb-4">Badges Earned</h3>
-        <div className="grid grid-cols-4 gap-4">
-          {badges.map((badge) => (
-            <div key={badge.id} className="text-center">
-              <div className="w-16 h-16 mx-auto mb-2">
-                <img src={badge.image} alt={badge.name} className="w-full h-full object-contain" />
+    <div 
+      className="min-h-screen relative bg-cover bg-center bg-fixed"
+      style={{ backgroundImage: `url(${BACKGROUND_IMAGE})` }}
+    >
+      <div className="absolute inset-0">
+        <div className="container mx-auto px-4 py-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/20 p-8 relative hover:bg-white/10 transition-all duration-300"
+          >
+            {/* Profile Header */}
+            <div className="flex items-center mb-8">
+              <div className="relative group">
+                <motion.img 
+                  src={profile.profilePic}
+                  alt="Profile"
+                  whileHover={{ scale: 1.1 }}
+                  className="w-24 h-24 rounded-full object-cover border-4 border-white/30"
+                />
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  className="hidden" 
+                  id="profilePicUpload"
+                  onChange={handleProfilePicUpload}
+                />
+                <label 
+                  htmlFor="profilePicUpload"
+                  className="absolute bottom-0 right-0 bg-white/20 rounded-full p-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Camera size={16} className="text-white" />
+                </label>
               </div>
-              <p className="text-sm font-medium">{badge.name}</p>
+
+              <div className="ml-6">
+                {isEditing ? (
+                  <input 
+                    type="text"
+                    value={profile.username}
+                    onChange={(e) => handleProfileUpdate('username', e.target.value)}
+                    className="text-2xl font-bold text-white bg-white/10 rounded-lg px-2 py-1"
+                  />
+                ) : (
+                  <h1 className="text-2xl font-bold text-white">{profile.username}</h1>
+                )}
+                
+                <div className="flex items-center mt-2">
+                  <Badge 
+                    size={16} 
+                    className={`mr-2 ${profile.isMentor ? 'text-green-400' : 'text-gray-500'}`} 
+                  />
+                  <span className="text-white/70">
+                    {profile.isMentor ? 'Mentor' : 'Learner'}
+                  </span>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setIsEditing(!isEditing)}
+                className="ml-auto bg-white/20 hover:bg-white/30 text-white p-2 rounded-full"
+              >
+                <Edit size={20} />
+              </button>
             </div>
-          ))}
+
+            {/* Profile Details */}
+            <div className="grid md:grid-cols-3 gap-6">
+              {/* Personal Info */}
+              <motion.div 
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="bg-white/10 rounded-xl p-6"
+              >
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                  <User className="mr-2 text-white/70" />
+                  Personal Info
+                </h3>
+                {isEditing ? (
+                  <textarea 
+                    value={profile.bio}
+                    onChange={(e) => handleProfileUpdate('bio', e.target.value)}
+                    className="w-full bg-white/10 text-white rounded-lg p-2"
+                    rows={4}
+                  />
+                ) : (
+                  <p className="text-white/80">{profile.bio}</p>
+                )}
+              </motion.div>
+              {/* Skills */}
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ 
+                  duration: 0.8,
+                  ease: [0.6, 0.05, -0.01, 0.9]
+                }}
+                whileHover={{ scale: 1.02 }}
+                className="bg-white/10 rounded-xl p-6"
+              >
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                  <Award className="mr-2 text-white/70" />
+                  Skills
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {profile.skills.map((skill, index) => (
+                    <motion.span 
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="bg-white/20 text-white px-3 py-1 rounded-full text-sm"
+                    >
+                      {skill}
+                    </motion.span>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Experience */}
+              <motion.div 
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+                className="bg-white/10 rounded-xl p-6"
+              >
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                  <Book className="mr-2 text-white/70" />
+                  Experience
+                </h3>
+                <p className="text-white/80">{profile.xp} XP</p>
+              </motion.div>
+            </div>
+
+            {/* Achievements */}
+            <div className="mt-8">
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Completed Courses */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.5 }}
+                  className="bg-white/10 rounded-xl p-6"
+                >
+                  <h3 className="text-xl font-semibold text-white mb-4">
+                    Completed Courses
+                  </h3>
+                  {completedCourses.map((course) => (
+                    <motion.div 
+                      key={course.id}
+                      whileHover={{ scale: 1.05 }}
+                      className="bg-white/20 rounded-lg p-4 mb-2"
+                    >
+                      <h4 className="text-white font-medium">{course.title}</h4>
+                      <p className="text-white/70 text-sm">
+                        Completed: {course.completionDate}
+                      </p>
+                    </motion.div>
+                  ))}
+                </motion.div>
+
+                {/* Badges */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 100 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.5 }}
+                  className="bg-white/10 rounded-xl p-6"
+                >
+                  <h3 className="text-xl font-semibold text-white mb-4">
+                    Badges Earned
+                  </h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    {badges.map((badge) => (
+                      <motion.div 
+                        key={badge.id}
+                        whileHover={{ rotate: 5, scale: 1.1 }}
+                        className="text-center"
+                      >
+                        <img 
+                          src={badge.image} 
+                          alt={badge.name} 
+                          className="w-20 h-20 object-contain mx-auto rounded-xl"
+                        />
+                        <p className="text-white/80 mt-2 text-sm">{badge.name}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>
