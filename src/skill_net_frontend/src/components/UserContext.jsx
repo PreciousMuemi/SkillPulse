@@ -70,7 +70,7 @@ export const UserProvider = ({ children }) => {
       
       // Update backend
       if (userProfile?.principalId) {
-        await skillnet_backend.updateUser(userProfile.principalId, newProfile);
+        await skill_net_backend.updateUser(userProfile.principalId, newProfile);
       }
 
       // Update local state and storage
@@ -97,7 +97,7 @@ export const UserProvider = ({ children }) => {
       if (!enrolledCourses.includes(courseId)) {
         // Update backend
         if (userProfile?.principalId) {
-          await skillnet_backend.enrollInCourse(userProfile.principalId, courseId);
+          await skill_net_backend.enrollInCourse(userProfile.principalId, courseId);
         }
 
         // Update local state and storage
@@ -106,7 +106,7 @@ export const UserProvider = ({ children }) => {
         localStorage.setItem('enrolledCourses', JSON.stringify(updatedEnrolledCourses));
         
         // Update XP and wallet balance if needed
-        const updatedProfile = await skillnet_backend.getUser(userProfile.principalId);
+        const updatedProfile = await skill_net_backend.getUser(userProfile.principalId);
         if (updatedProfile) {
           updateUserProfile(updatedProfile);
         }

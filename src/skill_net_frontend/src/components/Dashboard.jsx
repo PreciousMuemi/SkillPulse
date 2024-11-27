@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Bell, Book, Users, Award, Hash, Calendar, ChevronRight, LogOut } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Bell, Book, Users, Award, Hash, Calendar, ChevronRight, LogOut, Activity, Star, Zap, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+
+import Logo from './skillnet.jpg';
 import MentorProgram from './MentorProgram';
+import MentorRequestForm from './MentorRequestForm';
 import Header from './Header';
 import { blobToPrincipal } from '../utils/principal';
 import { skill_net_backend } from '../../../declarations/skill_net_backend';
@@ -12,38 +15,49 @@ const Dashboard = () => {
   const [userProfile, setUserProfile] = useState({
     principal: '',
     xp: 0,
-    walletBalance: 0
+    walletBalance: 0,
+    level: 1
   });
   const [userType, setUserType] = useState('user');
   const [mentorApplication, setMentorApplication] = useState(null);
   const [principalId, setPrincipalId] = useState('');
   const [activeTab, setActiveTab] = useState('mentoring');
   const [showMentorRequest, setShowMentorRequest] = useState(false);
-  const [mentorForm, setMentorForm] = useState({
-    subject: '',
-    timezone: '',
-    preferredTime: '',
-    frequency: '',
-    level: ''
-  });
+  const [mentorRequestLoading, setMentorRequestLoading] = useState(false);
   const [mentorMatch, setMentorMatch] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
 
   const communities = [
-    { id: 'js-community', name: 'JavaScript Enthusiasts', description: 'A community for JavaScript learners and experts.' },
-    { id: 'react-community', name: 'React Developers', description: 'A community for ReactJS enthusiasts to share knowledge and tips.' }
+    { id: 'js-community', name: 'JavaScript Enthusiasts', description: 'A community for JavaScript learners and experts.', members: 1240 },
+    { id: 'react-community', name: 'React Developers', description: 'A community for ReactJS enthusiasts to share knowledge and tips.', members: 980 }
   ];
 
   const studyJams = [
-    { id: 'js-study-jam', name: 'JavaScript Study Jam', date: '2024-12-10', description: 'Join this study jam to improve your JS skills with peers.' },
-    { id: 'react-study-jam', name: 'React Study Jam', date: '2024-12-12', description: 'Join this study jam to deepen your understanding of React.' }
+    { id: 'js-study-jam', name: 'JavaScript Study Jam', date: '2024-12-10', description: 'Join this study jam to improve your JS skills with peers.', spots: 15 },
+    { id: 'react-study-jam', name: 'React Study Jam', date: '2024-12-12', description: 'Join this study jam to deepen your understanding of React.', spots: 20 }
   ];
 
   const sidebarTabs = [
     { id: 'mentoring', icon: Users, label: 'Mentoring' },
+    { id: 'courses', icon: Book, label: 'Courses' },
     { id: 'communities', icon: Hash, label: 'Communities' },
     { id: 'study-jams', icon: Calendar, label: 'Study Jams' }
   ];
+
+  const addNotification = useCallback((message, type = 'info') => {
+    const newNotification = {
+      id: Date.now(),
+      message,
+      type
+    };
+    setNotifications(prev => [...prev, newNotification]);
+    
+    // Auto-remove notification after 5 seconds
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== newNotification.id));
+    }, 5000);
+  }, []);
 
   useEffect(() => {
     fetchUserProfile();
@@ -65,16 +79,17 @@ const Dashboard = () => {
         const userInfo = userResult.ok;
         setUserProfile({
           principal: principalId,
-
           xp: userInfo.tokens || 0,
-          walletBalance: userInfo.tokens || 0
+          walletBalance: userInfo.tokens || 0,
+          level: Math.floor((userInfo.tokens || 0) / 1000) + 1
         });
+        addNotification('Profile loaded successfully', 'success');
       }
     } catch (error) {
       console.error('Error fetching user info:', error);
+      addNotification('Failed to load profile', 'error');
     } finally {
-
-      setLoading(false);  // This ensures loading is set to false in all cases
+      setLoading(false);
     }
   };
 
@@ -83,9 +98,9 @@ const Dashboard = () => {
       const mentorApplication = {
         userId: principalId,
         submissionDate: Date.now(),
-        qualifications: [], // Add relevant qualifications
-        specializations: [], // Add relevant specializations
-        testScores: [], // Add any test scores
+        qualifications: [],
+        specializations: [],
+        testScores: [],
         status: "pending"
       };
   
@@ -93,103 +108,116 @@ const Dashboard = () => {
       
       if ('ok' in response) {
         setMentorApplication({ status: 'pending' });
+        addNotification('Mentor application submitted successfully', 'success');
       } else {
         console.error('Mentor application failed:', response.err);
+        addNotification('Failed to submit mentor application', 'error');
       }
     } catch (error) {
       console.error('Error applying for mentor:', error);
+      addNotification('Error during mentor application', 'error');
     }
-  };
-  const [mentorRequestLoading, setMentorRequestLoading] = useState(false);
-  const [mentorApplicationLoading, setMentorApplicationLoading] = useState(false);
-  const [showMentorRequest, setShowMentorRequest] = useState(false);
-  const [mentorMatch, setMentorMatch] = useState(null);
-
-  const handleMentorRequest = async (formData) => {
-    try {
-      setMentorRequestLoading(true);
-      const result = await skill_net_backend.requestMentor(formData);
-      if (result) {
-        handleMentorMatchSuccess(result);
-      }
-      setShowMentorRequest(false);
-    } catch (error) {
-      console.error('Error matching mentor:', error);
-    } finally {
-      setMentorRequestLoading(false);
-    }
-  };
-
-  const handleMentorMatchSuccess = (match) => {
-    setMentorMatch(match);
-    // Show success notification or update UI
   };
 
   const handleLogout = () => {
+    addNotification('Logging out...', 'info');
     navigate('/login');
   };
 
-  
+  const renderNotifications = () => (
+    <div className="fixed top-4 right-4 z-50 space-y-2">
+      <AnimatePresence>
+        {notifications.map((notification) => (
+          <motion.div
+            key={notification.id}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            className={`
+              p-4 rounded-lg shadow-lg text-white 
+              ${notification.type === 'success' ? 'bg-green-600' : 
+                notification.type === 'error' ? 'bg-red-600' : 'bg-blue-600'}
+            `}
+          >
+            {notification.message}
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-blue-500"></div>
-      </div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-100 to-blue-300"
+      >
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.2, 1],
+            rotate: [0, 10, -10, 0]
+          }}
+          transition={{ 
+            duration: 1.5, 
+            repeat: Infinity, 
+            ease: "easeInOut" 
+          }}
+          className="animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-blue-500"
+        />
+      </motion.div>
     );
   }
 
   return (
-   
-      {showMentorRequest && (
-        <MentorRequestForm 
-        onClose={() => setShowMentorRequest(false)}
-        onSuccess={(match) => {
-          setMentorMatch(match);
-          setShowMentorRequest(false);
-        }}
-        />
-      )}
-
-      {mentorMatch && (
-        <div className="bg-green-50 border-l-4 border-green-500 p-4 mt-4">
-          <h3 className="text-lg font-medium text-green-800">Mentor Match Found!</h3>
-          <div className="mt-2">
-            <p>Match Score: {(mentorMatch.matchScore * 100).toFixed(1)}%</p>
-            <p>Request ID: {mentorMatch.requestId}</p>
-            <button 
-              className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-              onClick={() => {/* Handle accepting match */}}
-            >
-              Accept Match
-            </button>
-          </div>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-gray-50 flex"
+    >
+      {renderNotifications()}
+      
+      {/* Sidebar */}
+      <motion.div 
+        initial={{ x: -100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-2xl flex flex-col"
+      >
+        <div className="p-6 text-center text-3xl font-bold tracking-wider border-b border-gray-700 flex items-center justify-center">
+        <div className="flex items-center">
+          <img src={Logo} alt="App Logo" className="h-10 w-10 mr-2" />
         </div>
-      )}
-    <div className="min-h-screen bg-gray-50 flex">
-      <div className="w-64 bg-gray-900 text-white shadow-lg flex flex-col">
-        <div className="p-4 text-center text-2xl font-bold tracking-wider bg-gray-800 border-b border-gray-700">
           SkillNet
         </div>
-        <nav className="mt-4 space-y-1 flex-grow">
+        
+        <nav className="mt-6 space-y-2 flex-grow px-4">
           {sidebarTabs.map((tab) => (
-            <button
+            <motion.button
               key={tab.id}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                flex items-center w-full px-4 py-3 transition-all duration-200 ease-in-out
+                flex items-center w-full px-4 py-3 rounded-lg transition-all duration-300 ease-in-out
                 ${activeTab === tab.id
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'}
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
               `}
             >
               <tab.icon className="w-5 h-5 mr-3" />
               <span className="flex-grow text-left">{tab.label}</span>
               {activeTab !== tab.id && <ChevronRight className="w-4 h-4 opacity-50" />}
-            </button>
+            </motion.button>
           ))}
         </nav>
         
-        <div className="p-4 border-t border-gray-700">
+        <motion.div 
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="p-4 border-t border-gray-700"
+        >
           <button
             onClick={handleLogout}
             className="flex items-center w-full text-gray-300 hover:text-white transition-colors"
@@ -197,122 +225,225 @@ const Dashboard = () => {
             <LogOut className="w-5 h-5 mr-3" />
             <span>Logout</span>
           </button>
-        </div>
-      </div>
-  
-      <div className="flex-grow bg-gray-100">
+        </motion.div>
+      </motion.div>
+
+      {/* Main Content */}
+      <div className="flex-grow bg-gray-100 overflow-y-auto">
         <Header className="bg-white shadow-sm" />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="px-4 py-6 sm:px-0">
-            <h1 className="text-3xl font-bold text-gray-900 mb-6">
-              Welcome back, {userProfile.principal || 'User'}!
-            </h1>
-  
-            <div className="bg-white overflow-hidden shadow rounded-lg divide-y divide-gray-200 mb-6">
-              <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-lg font-medium text-gray-900">Your Progress</h2>
-                <div className="mt-3 flex justify-between items-center">
-                  <div className="text-sm font-medium text-gray-500">Experience Points</div>
-                  <div className="text-sm font-medium text-gray-500">{userProfile.xp} XP</div>
-                </div>
-                <div className="mt-2 relative pt-1">
-                  <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(userProfile.xp % 1000) / 1000 * 100}%` }}
-                      transition={{ duration: 1 }}
-                      className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"
-                    />
-                  </div>
+        
+        <motion.main 
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6"
+        >
+          {/* User Progress Section */}
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="bg-white overflow-hidden shadow-xl rounded-2xl mb-6"
+          >
+            <div className="px-6 py-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                  <Star className="mr-2 text-yellow-500" />
+                  Your Progress
+                </h2>
+                <div className="flex items-center">
+                  <Activity className="mr-2 text-green-500" />
+                  <span className="text-sm font-medium text-gray-600">
+                    Level {userProfile.level}
+                  </span>
                 </div>
               </div>
-              <div className="px-4 py-4 sm:px-6">
+              
+              <div className="mt-4 flex items-center space-x-6">
+                <div className="flex-grow">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600">Experience Points</span>
+                    <span className="text-sm font-bold text-blue-600">
+                      {userProfile.xp} XP
+                    </span>
+                  </div>
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(userProfile.xp % 1000) / 1000 * 100}%` }}
+                    transition={{ duration: 1 }}
+                    className="h-3 bg-blue-500 rounded-full"
+                  />
+                </div>
                 <div className="text-sm font-medium text-gray-500">
-                  Wallet Balance: {userProfile.walletBalance || 0} SKN
+                  Wallet: {userProfile.walletBalance} SKN
                 </div>
               </div>
             </div>
-  
+          </motion.div>
+
+          {/* Dynamic Content Sections */}
+          <AnimatePresence mode="wait">
             {activeTab === 'mentoring' && (
-              <div className="space-y-6">
+              <motion.div 
+                key="mentoring"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 50 }}
+                className="space-y-6"
+              >
                 <MentorProgram />
+                
+                {/* Mentor Application Section */}
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Mentoring</h3>
-                  {userType === 'user' ? (
+                  {userType === 'user' && (
                     <div className="space-x-4">
                       {!mentorApplication && (
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={handleMentorApplication}
-                          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-all"
                         >
                           Apply to be a Mentor
-                        </button>
+                        </motion.button>
                       )}
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => setShowMentorRequest(true)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all"
                       >
                         Request a Mentor
-                      </button>
+                      </motion.button>
                     </div>
-                  ) : (
-                    <div className="text-green-600 font-medium">Active Mentor</div>
                   )}
                 </div>
-  
+
                 {mentorApplication && (
-                  <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg"
+                  >
                     <h4 className="font-semibold text-yellow-800">Mentor Application Status</h4>
                     <p className="text-yellow-700">Your application is being reviewed</p>
-                  </div>
+                  </motion.div>
                 )}
-  
-                {mentorMatch && (
-                  <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
-                    <h4 className="font-semibold text-blue-800">Mentor Match Found!</h4>
-                    <div className="text-blue-700 space-y-2">
-                      <p>Mentor: {mentorMatch.name}</p>
-                      <p>Expertise: {mentorMatch.expertise}</p>
-                      <p>Availability: {mentorMatch.available}</p>
-                      <p>Match Score: {(mentorMatch.confidence * 100).toFixed(2)}%</p>
-                    </div>
-                  </div>
-                )}
-              </div>
+              </motion.div>
             )}
-  
+
             {activeTab === 'communities' && (
-              <div className="space-y-4">
+              <motion.div 
+                key="communities"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 50 }}
+                className="space-y-4"
+              >
                 <h3 className="text-lg font-semibold">Communities</h3>
                 {communities.map((community) => (
-                  <div key={community.id} className="bg-white p-4 rounded-md shadow-md">
-                    <h4 className="text-md font-medium">{community.name}</h4>
-                    <p className="text-sm text-gray-500">{community.description}</p>
-                    <button className="text-blue-500 hover:underline text-sm">Join</button>
-                  </div>
+                  <motion.div 
+                    key={community.id}
+                    whileHover={{ scale: 1.03 }}
+                    className="bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition-all"
+                  >
+                    <h4 className="text-md font-medium flex items-center">
+                      <Hash className="mr-2 text-blue-500" />
+                      {community.name}
+                    </h4>
+                    <p className="text-sm text-gray-500 mt-2">{community.description}</p>
+                    <div className="mt-3 flex justify-between items-center">
+                      <span className="text-sm text-gray-600">{community.members}members</span>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-all"
+                      >
+                        Join
+                      </motion.button>
+                    </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
-  
+
             {activeTab === 'study-jams' && (
-              <div className="space-y-4">
+              <motion.div 
+                key="study-jams"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 50 }}
+                className="space-y-4"
+              >
                 <h3 className="text-lg font-semibold">Study Jams</h3>
                 {studyJams.map((studyJam) => (
-                  <div key={studyJam.id} className="bg-white p-4 rounded-md shadow-md">
-                    <h4 className="text-md font-medium">{studyJam.name}</h4>
-                    <p className="text-sm text-gray-500">{studyJam.description}</p>
-                    <div className="text-sm text-gray-600">Date: {studyJam.date}</div>
-                    <button className="text-blue-500 hover:underline text-sm">Join</button>
-                  </div>
+                  <motion.div 
+                    key={studyJam.id}
+                    whileHover={{ scale: 1.03 }}
+                    className="bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition-all"
+                  >
+                    <h4 className="text-md font-medium flex items-center">
+                      <Calendar className="mr-2 text-green-500" />
+                      {studyJam.name}
+                    </h4>
+                    <p className="text-sm text-gray-500 mt-2">{studyJam.description}</p>
+                    <div className="mt-3 flex justify-between items-center">
+                      <div className="text-sm text-gray-600">
+                        <span className="mr-2">Date: {studyJam.date}</span>
+                        <span className="text-blue-500">{studyJam.spots} spots left</span>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="px-3 py-1 bg-green-50 text-green-600 rounded-full hover:bg-green-100 transition-all"
+                      >
+                        Enroll
+                      </motion.button>
+                    </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
-          </div>
-  
-          {showMentorRequest && <MentorRequestForm />}
-        </main>
+          </AnimatePresence>
+
+          {/* Mentor Request Modal */}
+          <AnimatePresence>
+            {showMentorRequest && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+              >
+                <motion.div
+                  initial={{ scale: 0.7, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.7, opacity: 0 }}
+                  className="bg-white rounded-2xl p-6 w-full max-w-md mx-4"
+                >
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold">Request a Mentor</h2>
+                    <motion.button
+                      whileHover={{ rotate: 90 }}
+                      onClick={() => setShowMentorRequest(false)}
+                      className="text-gray-500 hover:text-gray-800"
+                    >
+                      <X className="w-6 h-6" />
+                    </motion.button>
+                  </div>
+                  <MentorRequestForm 
+                    onClose={() => setShowMentorRequest(false)}
+                    onSubmit={(formData) => {
+                      handleMentorRequest(formData);
+                      setShowMentorRequest(false);
+                    }}
+                  />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.main>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

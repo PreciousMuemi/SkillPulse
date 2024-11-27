@@ -35,8 +35,6 @@ function Header() {
       <nav className="container mx-auto px-4 flex items-center justify-between h-16">
         {/* Logo and App Name */}
         <div className="flex items-center">
-          <img src={Logo} alt="App Logo" className="h-10 w-10 mr-2" />
-          <span className="text-white font-bold text-xl">SkillNet</span>
         </div>
 
         {/* Desktop Nav */}
