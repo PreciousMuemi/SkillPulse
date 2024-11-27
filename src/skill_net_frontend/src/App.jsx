@@ -20,6 +20,9 @@ import NFTGallery from './components/NFTgallery';
 import AchievementsPanel from './components/AchievementsPanel';
 import JobMarket from './components/jobMarket';
 
+// Import UserProvider
+import { UserProvider } from './components/UserContext';
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authClient, setAuthClient] = useState(null);
@@ -38,11 +41,7 @@ function App() {
 
     initAuth();
   }, []);
-  useEffect(() => {
-    console.log('App mounting');
-    // Log any initial state or props
-  }, []);
-  
+
   const handleAuthenticated = async (client) => {
     setIsAuthenticated(true);
     const identity = client.getIdentity();
@@ -71,102 +70,26 @@ function App() {
     }
   };
 
-  // const handleWalletConnect = (connected) => {
-  //   setIsWalletConnected(connected);
-  // };
-
   return (
-    <Router>
-      <div className="app">
-        {/* {isAuthenticated && <WalletConnection onConnect={handleWalletConnect} />} */}
-        <Routes>
-          <Route path="/" element=
-            {isAuthenticated ? <Navigate to="/dashboard" /> : <LandingPage onLogin={login} />}
-          />
-          <Route path="/dashboard" element=
-            {isAuthenticated ? (
-              <Dashboard 
-                onLogout={logout}
-                isWalletConnected={isWalletConnected}
-              />
-            ) : (
-              <Navigate to="/" />
-            )}
-          />
-          <Route path="/course/:id" element=
-            {isAuthenticated ? (
-              <CourseDetail 
-                backendActor={backendActor}
-                isWalletConnected={isWalletConnected}
-              />
-            ) : (
-              <Navigate to="/" />
-            )}
-          />
-          <Route path="/profile" element=
-            {isAuthenticated ? (
-              <UserProfile 
-                backendActor={backendActor}
-                isWalletConnected={isWalletConnected}
-              />
-            ) : (
-              <Navigate to="/" />
-            )}
-          />
-          <Route path="/leaderboard" element=
-            {isAuthenticated ? (
-              <LeaderBoard 
-                backendActor={backendActor}
-                isWalletConnected={isWalletConnected}
-              />
-            ) : (
-              <Navigate to="/" />
-            )}
-          />
-          <Route path="/mentor-match" element=
-            {isAuthenticated ? (
-              <MentorMenteeMatch
-                backendActor={backendActor}
-                isWalletConnected={isWalletConnected}
-              />
-            ) : (
-              <Navigate to="/" />
-            )}
-          />
-          <Route path="/nft-gallery" element=
-            {isAuthenticated ? (
-              <NFTGallery 
-                backendActor={backendActor}
-                isWalletConnected={isWalletConnected}
-              />
-            ) : (
-              <Navigate to="/" />
-            )}
-          />
-          <Route path="/achievements" element=
-            {isAuthenticated ? (
-              <AchievementsPanel
-                backendActor={backendActor}
-                isWalletConnected={isWalletConnected}
-              />
-            ) : (
-              <Navigate to="/" />
-            )}
-          />
-          <Route path="/jobs" element=
-            {isAuthenticated ? (
-              <JobMarket 
-                backendActor={backendActor}
-                isWalletConnected={isWalletConnected}
-              />
-            ) : (
-              <Navigate to="/" />
-            )}
-          />
-        </Routes>
-        {/* <Footer /> */}
-      </div>
-    </Router>
+    <UserProvider> {/* Wrap the app with UserProvider */}
+      <Router>
+        <div className="app">
+          {/* {isAuthenticated && <WalletConnection onConnect={handleWalletConnect} />} */}
+          <Routes>
+            <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <LandingPage onLogin={login} />} />
+            <Route path="/dashboard" element={isAuthenticated ? (<Dashboard onLogout={logout} isWalletConnected={isWalletConnected} />) : (<Navigate to="/" />)} />
+            <Route path="/course/:id" element={isAuthenticated ? (<CourseDetail backendActor={backendActor} isWalletConnected={isWalletConnected} />) : (<Navigate to="/" />)} />
+            <Route path="/profile" element={isAuthenticated ? (<UserProfile backendActor={backendActor} isWalletConnected={isWalletConnected} />) : (<Navigate to="/" />)} />
+            <Route path="/leaderboard" element={isAuthenticated ? (<LeaderBoard backendActor={backendActor} isWalletConnected={isWalletConnected} />) : (<Navigate to="/" />)} />
+            <Route path="/mentor-match" element={isAuthenticated ? (<MentorMenteeMatch backendActor={backendActor} isWalletConnected={isWalletConnected} />) : (<Navigate to="/" />)} />
+            <Route path="/nft-gallery" element={isAuthenticated ? (<NFTGallery backendActor={backendActor} isWalletConnected={isWalletConnected} />) : (<Navigate to="/" />)} />
+            <Route path="/achievements" element={isAuthenticated ? (<AchievementsPanel backendActor={backendActor} isWalletConnected={isWalletConnected} />) : (<Navigate to="/" />)} />
+            <Route path="/jobs" element={isAuthenticated ? (<JobMarket backendActor={backendActor} isWalletConnected={isWalletConnected} />) : (<Navigate to="/" />)} />
+          </Routes>
+          {/* <Footer /> */}
+        </div>
+      </Router>
+    </UserProvider>
   );
 }
 

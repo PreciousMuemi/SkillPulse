@@ -19,43 +19,37 @@ export const UserProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      // Fetch user identity from Internet Identity
       const info = await skill_net_backend.whoami();
       if (!info) {
-        throw new Error('No user identity found');
+        throw new Error('No user identity found.');
       }
 
       const principalId = blobToPrincipal(info);
-      
-      // Fetch user profile from backend
+
       const backendProfile = await skill_net_backend.getUser(principalId);
-      
-      // Merge with local storage data
-      const storedProfile = JSON.parse(localStorage.getItem('userProfile'));
+
+      const storedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
       const storedEnrolledCourses = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
-      
+
       const mergedProfile = {
         ...storedProfile,
         ...backendProfile,
         principalId,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
 
       setUserProfile(mergedProfile);
       setEnrolledCourses(storedEnrolledCourses);
-      
-      // Update local storage
+
       localStorage.setItem('userProfile', JSON.stringify(mergedProfile));
-      
     } catch (err) {
-      console.error('Error fetching user data:', err);
-      setError(err.message);
-      
-      // Fallback to local storage if backend fails
-      const storedProfile = JSON.parse(localStorage.getItem('userProfile'));
+      console.error('Error fetching user data:', err.message);
+      setError('Failed to load user data. Using cached data.');
+
+      const storedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
       const storedEnrolledCourses = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
-      
-      if (storedProfile) {
+
+      if (Object.keys(storedProfile).length > 0) {
         setUserProfile(storedProfile);
         setEnrolledCourses(storedEnrolledCourses);
       }
@@ -67,25 +61,22 @@ export const UserProvider = ({ children }) => {
   const updateUserProfile = async (newProfile) => {
     try {
       setError(null);
-      
-      // Update backend
+
       if (userProfile?.principalId) {
         await skill_net_backend.updateUser(userProfile.principalId, newProfile);
       }
 
-      // Update local state and storage
       const updatedProfile = {
         ...userProfile,
         ...newProfile,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
-      
+
       setUserProfile(updatedProfile);
       localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
-      
     } catch (err) {
-      console.error('Error updating user profile:', err);
-      setError(err.message);
+      console.error('Error updating user profile:', err.message);
+      setError('Failed to update user profile.');
       throw err;
     }
   };
@@ -93,53 +84,39 @@ export const UserProvider = ({ children }) => {
   const enrollInCourse = async (courseId) => {
     try {
       setError(null);
-      
+
       if (!enrolledCourses.includes(courseId)) {
-        // Update backend
         if (userProfile?.principalId) {
           await skill_net_backend.enrollInCourse(userProfile.principalId, courseId);
         }
 
-        // Update local state and storage
         const updatedEnrolledCourses = [...enrolledCourses, courseId];
         setEnrolledCourses(updatedEnrolledCourses);
         localStorage.setItem('enrolledCourses', JSON.stringify(updatedEnrolledCourses));
-        
-        // Update XP and wallet balance if needed
+
         const updatedProfile = await skill_net_backend.getUser(userProfile.principalId);
         if (updatedProfile) {
           updateUserProfile(updatedProfile);
         }
       }
     } catch (err) {
-      console.error('Error enrolling in course:', err);
-      setError(err.message);
+      console.error('Error enrolling in course:', err.message);
+      setError('Failed to enroll in course.');
       throw err;
     }
   };
 
-  const logout = async () => {
+  const logout = () => {
     try {
-      // Call backend logout if needed
-      // await skillnet_backend.logout();
-      
-      // Clear local storage
       localStorage.removeItem('userProfile');
       localStorage.removeItem('enrolledCourses');
-      
-      // Reset state
       setUserProfile(null);
       setEnrolledCourses([]);
       setError(null);
-      
     } catch (err) {
-      console.error('Error during logout:', err);
-      setError(err.message);
+      console.error('Error during logout:', err.message);
+      setError('Failed to log out.');
     }
-  };
-
-  const refreshUserData = () => {
-    return fetchUserData();
   };
 
   const contextValue = {
@@ -150,14 +127,10 @@ export const UserProvider = ({ children }) => {
     updateUserProfile,
     enrollInCourse,
     logout,
-    refreshUserData
+    refreshUserData: fetchUserData,
   };
 
-  return (
-    <UserContext.Provider value={contextValue}>
-      {children}
-    </UserContext.Provider>
-  );
+  return <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>;
 };
 
 export const useUser = () => {
