@@ -1,434 +1,54 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Camera, Edit, User, Award, Book, Badge, X, Check, Plus } from 'lucide-react';
-
-// Dummy images (replace with actual paths)
-import BACKGROUND_IMAGE from '../images/bg.jpg';
-import BADGE_IMAGE from '../images/badge1.jpg';
-import BADGE_IMAGE2 from '../images/badge2.jpg';
-import DEFAULT_PROFILE_PIC from '../images/bg.jpg';
+import React, { useState } from 'react';
+// import { useUser } from '../context/UserContext'; // Assuming you have a UserContext
 
 const UserProfile = () => {
-  const [profile, setProfile] = useState({
-    username: '',
-    principal: '',
-    xp: 0,
-    skills: [],
-    bio: '',
-    isMentor: false,
-    profilePic: DEFAULT_PROFILE_PIC
+  const { user, updateUserVibe } = useUser();
+  const [contentStats, setContentStats] = useState({
+    posts: [],
+    engagement: 0,
+    streak: 0
   });
-
-  const [completedCourses, setCompletedCourses] = useState([]);
-  const [badges, setBadges] = useState([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // New state for editing skills and courses
-  const [newSkill, setNewSkill] = useState('');
-  const [newCourse, setNewCourse] = useState({
-    title: '',
-    completionDate: ''
-  });
-
-  useEffect(() => {
-    // Simulated data fetching
-    const fetchProfileData = async () => {
-      try {
-        setIsLoading(true);
-        // In a real app, this would be an API call
-        const initialProfile = {
-          username: 'skillmaster2024',
-          principal: 'x7h3d-dkf90-...',
-          xp: 1250,
-          skills: ['React', 'Blockchain', 'UI/UX'],
-          bio: 'Passionate about technology and continuous learning.',
-          isMentor: true,
-          profilePic: DEFAULT_PROFILE_PIC
-        };
-
-        const courses = [
-          { 
-            id: 1, 
-            title: 'Advanced React Development', 
-            completionDate: '2024-01-15' 
-          },
-          { 
-            id: 2, 
-            title: 'Blockchain Fundamentals', 
-            completionDate: '2024-02-20' 
-          }
-        ];
-
-        const earnedBadges = [
-          { 
-            id: 1, 
-            name: 'Blockchain Pioneer', 
-            image: BADGE_IMAGE 
-          },
-          { 
-            id: 2, 
-            name: 'React Master', 
-            image: BADGE_IMAGE2
-          }
-        ];
-
-        setProfile(initialProfile);
-        setCompletedCourses(courses);
-        setBadges(earnedBadges);
-      } catch (error) {
-        console.error('Failed to fetch profile data', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProfileData();
-  }, []);
-
-  // Enhanced profile update methods
-  const handleProfileUpdate = useCallback((field, value) => {
-    setProfile(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  }, []);
-
-  const handleProfilePicUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handleProfileUpdate('profilePic', reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // New skill management methods
-  const addSkill = () => {
-    if (newSkill.trim() && !profile.skills.includes(newSkill.trim())) {
-      setProfile(prev => ({
-        ...prev,
-        skills: [...prev.skills, newSkill.trim()]
-      }));
-      setNewSkill('');
-    }
-  };
-
-  const removeSkill = (skillToRemove) => {
-    setProfile(prev => ({
-      ...prev,
-      skills: prev.skills.filter(skill => skill !== skillToRemove)
-    }));
-  };
-
-  // New course management methods
-  const addCourse = () => {
-    if (newCourse.title.trim() && newCourse.completionDate) {
-      const courseToAdd = {
-        id: Date.now(),
-        title: newCourse.title.trim(),
-        completionDate: newCourse.completionDate
-      };
-      setCompletedCourses(prev => [...prev, courseToAdd]);
-      setNewCourse({ title: '', completionDate: '' });
-    }
-  };
-
-  const removeCourse = (courseId) => {
-    setCompletedCourses(prev => 
-      prev.filter(course => course.id !== courseId)
-    );
-  };
-
-  // Render loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-blue-800 flex items-center justify-center">
-        <div className="animate-pulse text-white text-2xl">
-          Loading Profile...
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="fixed inset-0 bg-cover bg-center bg-no-repeat" 
-      style={{ 
-        backgroundImage: `url(${BACKGROUND_IMAGE})`, 
-        backgroundAttachment: 'fixed',
-        backgroundSize: 'cover'
-      }}
-    >
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-lg overflow-y-auto">
-        <div className="container mx-auto px-4 py-12 relative max-w-6xl">
-          <motion.div 
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-8 relative hover:bg-white/15 transition-all duration-300"
-          >
-            {/* Profile Header - Similar to previous implementation */}
-            <div className="flex items-center mb-8">
-              <div className="relative group">
-                <motion.img 
-                  src={profile.profilePic}
-                  alt="Profile"
-                  whileHover={{ scale: 1.1 }}
-                  className="w-24 h-24 rounded-full object-cover border-4 border-white/30"
-                />
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  className="hidden" 
-                  id="profilePicUpload"
-                  onChange={handleProfilePicUpload}
-                />
-                <label 
-                  htmlFor="profilePicUpload"
-                  className="absolute bottom-0 right-0 bg-white/20 rounded-full p-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Camera size={16} className="text-white" />
-                </label>
-              </div>
-
-              <div className="ml-6 flex-grow">
-                {isEditing ? (
-                  <input 
-                    type="text"
-                    value={profile.username}
-                    onChange={(e) => handleProfileUpdate('username', e.target.value)}
-                    className="text-2xl font-bold text-white bg-white/10 rounded-lg px-2 py-1 w-full"
-                    placeholder="Enter username"
-                  />
-                ) : (
-                  <h1 className="text-2xl font-bold text-white">{profile.username}</h1>
-                )}
-                
-                <div className="flex items-center mt-2">
-                  <Badge 
-                    size={16} 
-                    className={`mr-2 ${profile.isMentor ? 'text-green-400' : 'text-gray-500'}`} 
-                  />
-                  <span className="text-white/70">
-                    {profile.isMentor ? 'Mentor' : 'Learner'}
-                  </span>
-                </div>
-              </div>
-
-              <button 
-                onClick={() => setIsEditing(!isEditing)}
-                className="ml-auto bg-white/20 hover:bg-white/30 text-white p-2 rounded-full"
-              >
-                {isEditing ? <X size={20} /> : <Edit size={20} />}
-              </button>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Hero Section */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-white/20">
+          <div className="flex items-center gap-6">
+            <div className="relative group">
+              <img 
+                src={user.profilePic} 
+                className="w-24 h-24 rounded-full object-cover ring-4 ring-purple-200 group-hover:ring-purple-400 transition-all"
+              />
+              <span className="absolute bottom-0 right-0 bg-gradient-to-r from-purple-500 to-pink-500 p-2 rounded-full text-white text-xs">
+                {user.vibeStatus.level}
+              </span>
             </div>
-
-            {/* Profile Details - Enhanced with more interactive editing */}
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* Personal Info */}
-              <motion.div 
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-                className="bg-white/10 rounded-xl p-6"
-              >
-                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                  <User className="mr-2 text-white/70" />
-                  Personal Info
-                </h3>
-                {isEditing ? (
-                  <textarea 
-                    value={profile.bio}
-                    onChange={(e) => handleProfileUpdate('bio', e.target.value)}
-                    className="w-full bg-white/10 text-white rounded-lg p-2"
-                    rows={4}
-                    placeholder="Tell us about yourself..."
-                  />
-                ) : (
-                  <p className="text-white/80">{profile.bio}</p>
-                )}
-              </motion.div>
-
-              {/* Skills - Enhanced with add/remove functionality */}
-              <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8 }}
-                whileHover={{ scale: 1.02 }}
-                className="bg-white/10 rounded-xl p-6"
-              >
-                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                  <Award className="mr-2 text-white/70" />
-                  Skills
-                </h3>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {profile.skills.map((skill, index) => (
-                    <motion.span 
-                      key={index}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="bg-white/20 text-white px-3 py-1 rounded-full text-sm flex items-center"
-                    >
-                      {skill}
-                      {isEditing && (
-                        <button 
-                          onClick={() => removeSkill(skill)} 
-                          className="ml-2 hover:text-red-400"
-                        >
-                          <X size={12} />
-                        </button>
-                      )}
-                    </motion.span>
-                  ))}
-                </div>
-                {isEditing && (
-                  <div className="flex">
-                    <input 
-                      type="text"
-                      value={newSkill}
-                      onChange={(e) => setNewSkill(e.target.value)}
-                      className="flex-grow bg-white/10 text-white rounded-l-lg px-2 py-1"
-                      placeholder="Add a skill"
-                    />
-                    <button 
-                      onClick={addSkill}
-                      className="bg-white/20 text-white px-3 py-1 rounded-r-lg hover:bg-white/30"
-                    >
-                      <Plus size={16} />
-                    </button>
-                  </div>
-                )}
-              </motion.div>
-
-              {/* Experience */}
-              <motion.div 
-                initial={{ opacity: 0, x: 100 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-                className="bg-white/10 rounded-xl p-6"
-              >
-                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                  <Book className="mr-2 text-white/70" />
-                  Experience
-                </h3>
-                <p className="text-white/80">{profile.xp} XP</p>
-              </motion.div>
+            
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                {user.displayName}
+              </h1>
+              <p className="text-gray-600 mt-1">
+                {user.vibeStatus.mood} • {user.streak} Day Streak 🔥
+              </p>
             </div>
+          </div>
+        </div>
 
-            {/* Achievements */}
-            <div className="mt-8">
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Completed Courses - Enhanced with add/remove functionality */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5, duration: 0.5 }}
-                  className="bg-white/10 rounded-xl p-6"
-                >
-                  <h3 className="text-xl font-semibold text-white mb-4">
-                    Completed Courses
-                  </h3>
-                  {completedCourses.map((course) => (
-                    <motion.div 
-                      key={course.id}
-                      whileHover={{ scale: 1.05 }}
-                      className="bg-white/20 rounded-lg p-4 mb-2 flex justify-between items-center"
-                    >
-                      <div>
-                        <h4 className="text-white font-medium">{course.title}</h4>
-                        <p className="text-white/70 text-sm">
-                          Completed: {course.completionDate}
-                        </p>
-                      </div>
-                      {isEditing && (
-                        <button 
-                          onClick={() => removeCourse(course.id)} 
-                          className="text-white hover:text-red-400"
-                        >
-                          <X size={16} />
-                        </button>
-                      )}
-                    </motion.div>
-                  ))}
-                  {isEditing && (
-                    <div className="mt-4 space-y-2">
-                      <input 
-                        type="text"
-                        value={newCourse.title}
-                        onChange={(e) => setNewCourse(prev => ({...prev, title: e.target.value}))}
-                        className="w-full bg-white/10 text-white rounded-lg px-2 py-1"
-                        placeholder="Course Title"
-                      />
-                      <input 
-                        type="date"
-                        value={newCourse.completionDate}
-                        onChange={(e) => setNewCourse(prev => ({...prev, completionDate: e.target.value}))}
-                        className="w-full bg-white/10 text-white rounded-lg px-2 py-1"
-                      />
-                      <button 
-                        onClick={addCourse}
-                        className="w-full bg-white/20 text-white py-1 rounded-lg hover:bg-white/30 flex items-center justify-center"
-                      >
-                        <Plus size={16} className="mr-2" /> Add Course
-                      </button>
-                    </div>
-                  )}
-                </motion.div>
-
-                {/* Badges */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 100 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6, duration: 0.5 }}
-                  className="bg-white/10 rounded-xl p-6"
-                >
-                  <h3 className="text-xl font-semibold text-white mb-4">
-                    Badges Earned
-                  </h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    {badges.map((badge) => (
-                      <motion.div 
-                        key={badge.id}
-                        whileHover={{ rotaterotate: 5, scale: 1.1 }}
-                        className="text-center"
-                      >
-                        <img 
-                          src={badge.image} 
-                          alt={badge.name} 
-                          className="w-20 h-20 object-contain mx-auto rounded-xl"
-                        />
-                        <p className="text-white/80 mt-2 text-sm">{badge.name}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              </div>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          {[
+            { label: 'Content Score', value: user.contentScore, icon: '🎯' },
+            { label: 'Tribe Members', value: user.tribe.length, icon: '👥' },
+            { label: 'Achievements', value: user.achievements.length, icon: '🏆' }
+          ].map(stat => (
+            <div key={stat.label} className="bg-white/80 backdrop-blur-lg rounded-xl p-6 shadow-lg hover:shadow-xl transition-all">
+              <div className="text-2xl mb-2">{stat.icon}</div>
+              <div className="text-gray-600">{stat.label}</div>
+              <div className="text-3xl font-bold text-purple-600">{stat.value}</div>
             </div>
-
-            {/* Save/Cancel buttons for editing */}
-            {isEditing && (
-              <div className="mt-6 flex justify-end space-x-4">
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="bg-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/30 flex items-center"
-                >
-                  <X size={16} className="mr-2" /> Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    // Here you would typically save to backend
-                    console.log('Saving profile', profile);
-                    setIsEditing(false);
-                  }}
-                  className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center"
-                >
-                  <Check size={16} className="mr-2" /> Save Changes
-                </button>
-              </div>
-            )}
-          </motion.div>
+          ))}
         </div>
       </div>
     </div>

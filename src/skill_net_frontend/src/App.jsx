@@ -19,10 +19,10 @@ import LeaderBoard from './components/LeaderBoard';
 import NFTGallery from './components/NFTgallery';
 import AchievementsPanel from './components/AchievementsPanel';
 import JobMarket from './components/jobMarket';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Import UserProvider
 import { UserProvider } from './components/UserContext';
-
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authClient, setAuthClient] = useState(null);

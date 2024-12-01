@@ -3,9 +3,21 @@ import { skill_net_backend } from '../../../declarations/skill_net_backend';
 import { blobToPrincipal } from '../utils/principal';
 
 const UserContext = createContext();
-
 export const UserProvider = ({ children }) => {
-  const [userProfile, setUserProfile] = useState(null);
+  const [userVibe, setUserVibe] = useState({
+    mood: '✨', // Current vibe emoji
+    streak: 0,  // Daily engagement streak
+    tribe: []   // Learning squad/community
+  });
+
+  // Enhanced user profile with Gen-Z elements
+  const [userProfile, setUserProfile] = useState({
+    displayName: '',
+    vibeLevel: 1,
+    achievements: [],
+    squad: [], // Mentors & peer teachers
+    contentStreak: 0
+  });
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,7 +50,7 @@ export const UserProvider = ({ children }) => {
         lastUpdated: new Date().toISOString(),
       };
 
-      setUserProfile(mergedProfile);
+      setUserProfile(prevProfile => ({...prevProfile, ...mergedProfile}));
       setEnrolledCourses(storedEnrolledCourses);
 
       localStorage.setItem('userProfile', JSON.stringify(mergedProfile));
@@ -50,7 +62,7 @@ export const UserProvider = ({ children }) => {
       const storedEnrolledCourses = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
 
       if (Object.keys(storedProfile).length > 0) {
-        setUserProfile(storedProfile);
+        setUserProfile(prevProfile => ({...prevProfile, ...storedProfile}));
         setEnrolledCourses(storedEnrolledCourses);
       }
     } finally {
@@ -58,6 +70,10 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  const updateUserVibe = async (newVibe) => {
+    await skill_net_backend.updateUserVibe(userProfile.principalId, newVibe);
+    setUserVibe(newVibe);
+  };
   const updateUserProfile = async (newProfile) => {
     try {
       setError(null);

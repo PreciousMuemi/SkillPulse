@@ -1,146 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, XCircle, CheckCircle, Star, TrendingUp } from 'lucide-react';
+import { skill_net_backend } from '../../../declarations/skill_net_backend';
 
-const ContentUploadComponent = () => {
-  const [file, setFile] = useState(null);
-  const [skillLevelDetails, setSkillLevelDetails] = useState({
-    level: 'Beginner',
-    subLevel: 1,
-    points: 0,
-    nextLevelPoints: 100
-  });
-  const [uploadStatus, setUploadStatus] = useState('idle');
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [recommendedContent, setRecommendedContent] = useState([]);
-  const [engagementMetrics, setEngagementMetrics] = useState({ views: 0, likes: 0, comments: 0 });
+const ContentCreation = () => {
+  const { user, checkEligibility } = useUser();
+  const [eligibility, setEligibility] = useState(null);
 
-  const isVideoFile = (file) => {
-    return file && file.type.startsWith('video/');
+  const contentTypes = {
+    'tutorial': { icon: '📚', minLevel: 2 },
+    'showcase': { icon: '🎨', minLevel: 3 },
+    'challenge': { icon: '🎯', minLevel: 4 }
   };
 
-  const validateContentPosting = async () => {
+  const handleContentSubmit = async (content) => {
     try {
-      const result = await skillNetContract.validateContentPosting({
-        level: skillLevelDetails.level,
-        subLevel: skillLevelDetails.subLevel
-      });
-
-      if (!result.canPost) {
-        throw new Error('Not eligible to post content at this level');
+      const eligibilityCheck = await checkEligibility(content.type);
+      if (!eligibilityCheck.canPost) {
+        throw new Error(`Level ${eligibilityCheck.requiredLevel} required!`);
       }
-
-      return true;
+      // Content submission logic
     } catch (error) {
-      setUploadStatus('error');
-      return false;
-    }
-  };
-
-  const fetchRecommendedContent = async () => {
-    try {
-      const recommendations = await skillNetContract.getRecommendedContent({
-        currentLevel: skillLevelDetails.level,
-        currentSubLevel: skillLevelDetails.subLevel
-      });
-
-      setRecommendedContent(recommendations);
-    } catch (error) {
-      console.error('Failed to fetch recommendations:', error);
-    }
-  };
-
-  const updateSkillProgress = (uploadedContent) => {
-    const pointsEarned = calculateSkillPoints(uploadedContent);
-    
-    const newPoints = skillLevelDetails.points + pointsEarned;
-    const newSubLevel = calculateSubLevel(newPoints);
-    const newLevel = calculateLevel(newPoints);
-
-    setSkillLevelDetails(prev => ({
-      ...prev,
-      points: newPoints,
-      subLevel: newSubLevel,
-      level: newLevel,
-      nextLevelPoints: calculateNextLevelPoints(newLevel)
-    }));
-
-    fetchRecommendedContent();
-    distributePaymentBasedOnEngagement(uploadedContent.id);
-  };
-
-  const calculateSkillPoints = (content) => {
-    return Math.floor((engagementMetrics.views + engagementMetrics.likes * 2 + engagementMetrics.comments * 3) / content.length); 
-  };
-
-  const distributePaymentBasedOnEngagement = async (contentId) => {
-    const totalEngagement = engagementMetrics.views + engagementMetrics.likes + engagementMetrics.comments;
-    
-    if (totalEngagement > 0) { 
-        const paymentAmount = totalEngagement * TOKEN_VALUE; 
-        
-        await skillNetContract.distributeTokens(contentId, paymentAmount); 
-        console.log(`Distributed ${paymentAmount} tokens for content ID ${contentId}`);
-    }
-  };
-
-  const calculateSubLevel = (totalPoints) => {
-    return Math.min(5, Math.floor(totalPoints / 20) + 1);
-  };
-
-  const calculateLevel = (totalPoints) => {
-    if (totalPoints < 100) return 'Beginner';
-    if (totalPoints < 300) return 'Intermediate';
-    return 'Advanced';
-  };
-
-  const calculateNextLevelPoints = (level) => {
-    switch (level) {
-        case 'Beginner': return 100;
-        case 'Intermediate': return 300;
-        case 'Advanced': return 500;
-        default: return 100;
-    }
-  };
-
-  const handleFileUpload = async () => {
-    if (!file || !isVideoFile(file)) {
-      alert('Please upload a valid video file.');
-      return;
-    }
-
-    setUploadStatus('uploading');
-
-    try {
-      const isEligible = await validateContentPosting();
-
-      if (!isEligible) {
-        throw new Error('Posting not allowed');
-      }
-
-      const editedVideoFile = await editVideo(file);
-      const uploadResult = await uploadToIPFS(editedVideoFile, {
-        skillLevel : skillLevelDetails.level,
-        subLevel: skillLevelDetails.subLevel
-      });
-
-      updateSkillProgress(uploadResult);
-      setUploadStatus('success');
-    } catch (error) {
-      console.error('Upload failed:', error);
-      setUploadStatus('error');
+      toast.error(error.message);
     }
   };
 
   return (
-    <div>
-      <h1>Upload Your Content</h1>
-      <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-      <button onClick={handleFileUpload}>Upload</button>
-      {uploadStatus === 'uploading' && <p>Uploading...</p>}
-      {uploadStatus === 'success' && <p>Upload successful!</p>}
-      {uploadStatus === 'error' && <p>Upload failed. Please try again.</p>}
+    <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl">
+      <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+        Share Your Magic ✨
+      </h2>
+      
+      {eligibility?.canPost ? (
+        <div className="space-y-4">
+          <select className="w-full p-3 rounded-xl border border-purple-100 focus:ring-2 focus:ring-purple-200">
+            {Object.entries(contentTypes).map(([type, info]) => (
+              <option key={type} disabled={user.vibeStatus.level < info.minLevel}>
+                {info.icon} {type.charAt(0).toUpperCase() + type.slice(1)}
+              </option>
+            ))}
+          </select>
+          
+          <textarea 
+            placeholder="Drop your knowledge here..."
+            className="w-full p-4 rounded-xl border border-purple-100 h-32 focus:ring-2 focus:ring-purple-200"
+          />
+          
+          <button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-xl font-medium hover:opacity-90 transition-all">
+            Share with the Squad 🚀
+          </button>
+        </div>
+      ) : (
+        <div className="text-center p-6 bg-purple-50 rounded-xl">
+          <p className="text-lg font-medium text-purple-600">
+            Level up to unlock more content powers! 🎯
+          </p>
+          <p className="text-sm text-purple-400 mt-2">
+            Next unlock at level {user.vibeStatus.level + 1}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
 
-export default ContentUploadComponent;
+export default ContentCreation;

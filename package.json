@@ -16,6 +16,7 @@
     "src/skill_net_frontend"
   ],
   "dependencies": {
-    "react-confetti": "^6.1.0"
+    "react-confetti": "^6.1.0",
+    "react-toastify": "^10.0.6"
   }
 }
