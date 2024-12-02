@@ -4,9 +4,10 @@ import { Bell, Book, Users, Award, Hash, Calendar, ChevronRight, LogOut, Activit
 import { useNavigate } from 'react-router-dom';
 import { Upload } from 'lucide-react';
 import { ToastContainer } from 'react-toastify';
-
+import MentorDiscovery from './MentorDiscovery';
 import 'react-toastify/dist/ReactToastify.css';
 import Logo from './skillnet.jpg';
+import MentorQualificationSystem from './MentorQualification';
 // import MentorProgram from './MentorProgram';
 import MentorRequestForm from './MentorRequestForm';
 import Header from './Header';
@@ -325,14 +326,15 @@ const Dashboard = () => {
                 exit={{ opacity: 0, y: 50 }}
                 className="space-y-6"
               >
-                {/* <MentorProgram /> */}
+                {/* {<MentorQualificationSystem/> } */}
                 
                 {/* Mentor Application Section */}
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Mentoring</h3>
+                  {/* <h3 className="text-lg font-semibold">Mentoring</h3> */}
                   {userType === 'user' && (
                     <div className="space-x-4">
-                      {!mentorApplication && (
+                      <MentorDiscovery />
+                      {/* {!mentorApplication && (
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
@@ -341,7 +343,7 @@ const Dashboard = () => {
                         >
                           Apply to be a Mentor
                         </motion.button>
-                      )}
+                      )} */}
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}

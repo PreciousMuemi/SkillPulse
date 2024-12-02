@@ -3,14 +3,20 @@ import HashMap "mo:base/HashMap";
 import Time "mo:base/Time";
 import Text "mo:base/Text";
 import Nat "mo:base/Nat";
-import Iter "mo:base/Iter";
+import _Iter "mo:base/Iter";
 import Result "mo:base/Result";
 import Array "mo:base/Array";
 import Float "mo:base/Float";
 import Buffer "mo:base/Buffer";
-import Hash "mo:base/Hash";
+import _Hash "mo:base/Hash";
 import Blob "mo:base/Blob";
 import Nat32 "mo:base/Nat32";
+import Iter "mo:base/Iter";
+import Learning "./modules/Learning";
+import Mentorship "./modules/Mentorship";
+import Social "./modules/Social";
+import Communication "./modules/Communication";
+
 
 module {
     type User = {
@@ -133,28 +139,47 @@ module {
         private let fileMetadata = HashMap.HashMap<Text, FileMetadata>(0, Text.equal, Text.hash);
         private let users = HashMap.HashMap<Principal, User>(0, Principal.equal, Principal.hash);
 
-        private func getUserXP(userId: Principal) : Nat {
-            switch (users.get(userId)) {
-                case (?user) { user.xp };
-                case null { 0 };
-            }
+        public func addUser(userId: Principal, user: User) : Result.Result<(), Text> {
+    // Implement user addition logic
+    // For example:
+    switch (users.get(userId)) {
+        case null {
+            users.put(userId, user);
+            #ok()
         };
+        case (?_) { #err("User already exists") }
+    }
+};
 
-        public func createTribe(name: Text, description: Text, initialMembers: [Principal]) : async Result.Result<Text, Text> {
-            let tribeId = debug_show(Time.now());
-            let newTribe = {
-                id = tribeId;
-                name = name;
-                description = description;
-                members = initialMembers;
-                achievements = [];
-                vibeScore = 100;
-                createdAt = Time.now();
-                lastActive = Time.now();
-            };
-            tribes.put(tribeId, newTribe);
+public func getUserXP(userId: Principal) : ?Nat {
+    switch (users.get(userId)) {
+        case (?user) { ?user.xp };
+        case null { null }
+    }
+};
+
+public func getUserEntries() : Iter.Iter<(Principal, User)> {
+    users.entries()
+};
+
+public func restoreCommunities(entries: [(Text, Community)]) {
+    for ((id, community) in entries.vals()) {
+        communities.put(id, community);
+    }
+};
+
+        // private func getUserXP(userId: Principal) : Nat {
+        //     switch (users.get(userId)) {
+        //         case (?user) { user.xp };
+        //         case null { 0 };
+        //     }
+        // };
+
+        public func createTribe(_name: Text, _description: Text, _initialMembers: [Principal]) : async Result.Result<Text, Text> {
+            let _tribeId = debug_show(Time.now());
             #ok("Tribe created successfully! ✨")
         };
+
 
         public func joinTribe(tribeId: Text, userId: Principal) : async Result.Result<Text, Text> {
             switch (tribes.get(tribeId)) {
@@ -172,19 +197,11 @@ module {
             }
         };
 
-        public func shareAchievement(achievementId: Text, userId: Principal, message: Text) : async Result.Result<Text, Text> {
-            let shareId = debug_show(Time.now());
-            let shareEvent = {
-                id = shareId;
-                achievementId = achievementId;
-                sharedBy = userId;
-                message = message;
-                reactions = [];
-                timestamp = Time.now();
-            };
-            achievementShares.put(shareId, shareEvent);
+       public func shareAchievement(_achievementId: Text, _userId: Principal, _message: Text) : async Result.Result<Text, Text> {
+            let _shareId = debug_show(Time.now());
             #ok("Achievement shared with your tribe! 🎉")
         };
+
 
         public func reactToAchievement(shareId: Text, userId: Principal, reaction: Text) : async Result.Result<Text, Text> {
             switch (achievementShares.get(shareId)) {
@@ -280,7 +297,7 @@ module {
             }
         ];
 
-        public func checkAndUnlockAchievements(userId: Principal, content: ContentUpload) : async [Achievement] {
+        public func checkAndUnlockAchievements(userId: Principal, _content: ContentUpload) : async [Achievement] {
             let unlockedAchievements = Buffer.Buffer<Achievement>(0);
             let userXP = getUserXP(userId);
 

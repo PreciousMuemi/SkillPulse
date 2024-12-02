@@ -2,500 +2,240 @@ import Principal "mo:base/Principal";
 import HashMap "mo:base/HashMap";
 import Time "mo:base/Time";
 import Text "mo:base/Text";
-import Nat "mo:base/Nat";
-import Iter "mo:base/Iter";
 import Result "mo:base/Result";
+import Buffer "mo:base/Buffer";
 import Array "mo:base/Array";
+import Nat "mo:base/Nat";
 import Float "mo:base/Float";
-import Blob "mo:base/Blob";
+import Iter "mo:base/Iter";
+import Debug "mo:base/Debug";
 
-import Learning "./modules/Learning";
-import Social "./modules/Social";
-import Mentorship "./modules/Mentorship";
+actor MainActor {
+        
 
-actor SkillNet {
-    type User = {
-        userId: Principal;
-        skills: [Text];
-        completedCourses: [(Text, Nat)];
-        tokens: Nat;
-        nfts: [Text];
-        mentor: Bool;
-        experience_years: Nat;
-        rating: Float;
-        availability: [Text];
-        timezone: Text;
-        profile: UserProfile;
-        verificationStatus: Text;
-        lastActive: Time.Time;
-        achievements: [Text];
-        xp: Nat;
-        skillLevel: SkillLevel;
-        vibeStatus: VibeStatus;
-        contentScore: Nat;
-        tribe: [Principal];
-    };
-
+    // Define user profile structure with more attributes
     type UserProfile = {
+        name: Text;
         bio: Text;
-        education: [Text];
-        certifications: [Text];
-        socialLinks: [Text];
-        preferredLanguages: [Text];
+        avatar: Text;
+        location: Text;
+        badges: [Text]; // Badges that the user has earned
+        certifications: [Text]; // List of certifications earned
+        skills: [Text]; // List of skills the user has
+        preferredMentorshipStyle: MentorshipStyle; // Preferred mentorship style
+        expertise: [Text]; // Expertise areas (e.g., "AI", "Blockchain", etc.)
+        activityLevel: Float; // 0 to 1 scale (higher activity = better match)
+        experienceYears: Float; // Years of experience
+        learningPreferences: [Text]; // Preferences for learning methods (e.g., "video", "reading")
     };
 
-    type UserVibe = {
-        mood: Text;
-        streak: Nat;
-        tribe: [Principal];
-        lastVibeUpdate: Time.Time;
-    };
-
-    type MentorRequest = {
-        subject: Text;
-        availability: [Text];
-        timezone: Text;
-        preferredLanguage: Text;
-    };
-
-    type Mentor = {
-        id: Principal;
-        expertise: [Text];
-        availability: [Text];
-        timezone: Text;
-        preferredLanguage: Text;
-        rating: Float;
-    };
-
-    type MentorApplication = {
-        userId: Principal;
-        submissionDate: Time.Time;
-        qualifications: [Text];
-        specializations: [Text];
-        testScores: [(Text, Nat)];
-        status: Text;
-    };
-
-    type MentorMatch = {
-        mentor_id: Text;
-        similarity: Float;
-        experience_years: Nat;
-        rating: Float;
-        availability: [Text];
-        timezone: Text;
-        match_score: Float;
-        skill_overlap: [Text];
-    };
-
-    type MatchMetrics = {
-        total_matches: Nat;
-        success_rate: Float;
-        average_rating: Float;
-        last_updated: Time.Time;
-    };
-
-    type MentorProfile = {
-        userId: Principal;
-        expertiseAreas: [Text];
-        mentorshipStyle: MentorshipStyle;
-        availabilitySlots: [TimeSlot];
-        menteeCapacity: Nat;
-        currentMentees: [Principal];
-        rating: Float;
-    };
-
+    // Define mentorship styles
     type MentorshipStyle = {
         #HandsOn;
         #Guided;
         #Strategic;
         #Technical;
+        #Other;
     };
 
-    type TimeSlot = {
-        dayOfWeek: Text;
-        startTime: Text;
-        endTime: Text;
+    // Define a User structure that contains the user profile
+    type User = {
+        userId: Principal;
+        profile: UserProfile;
     };
 
+    // Define mentorship match structure
     type MentorshipMatch = {
         mentorId: Principal;
         menteeId: Principal;
         matchScore: Float;
-        recommendedInteractionStyle: MentorshipStyle;
-        suggestedTopics: [Text];
+    };
+    type Result<T, E> =  { 
+        #ok: T; 
+        #err: E; 
     };
 
-    type Course = {
-        courseId: Text;
-        title: Text;
-        description: Text;
-        difficulty: Text;
-        tokenReward: Nat;
-        nftReward: Text;
-        modules: [Text];
+    // Scalable HashMap to store users and their profiles
+    var users = HashMap.HashMap<Principal, User>(1000, 
+        func (x: Principal, y: Principal): Bool { x == y }, 
+        func (x: Principal): HashMap.Hash { HashMap.hashPrincipal(x) }
+    );
+
+    // Scalable HashMap to store mentorship matches
+    var mentorMatches = HashMap.HashMap<Principal, [MentorshipMatch]>(1000, 
+        func (x: Principal, y: Principal): Bool { x == y }, 
+        func (x: Principal): HashMap.Hash { HashMap.hashPrincipal(x) }
+    );
+
+    public shared func addUser(userId: Principal, profile: UserProfile) : async Result<(), Text> {
+        let newUser = User { userId = userId; profile = profile };
+        users.put(userId, newUser);
+        return #ok(());
     };
 
-    type Project = {
-        projectId: Text;
-        courseId: Text;
-        userId: Principal;
-        feedback: ?Text;
-        rating: ?Nat;
-    };
+ 
 
-    type SkillLevel = {
-        level: Nat;
-        title: Text;
-    };
-
-    type ContentUpload = {
-        id: Text;
-        userId: Principal;
-        courseId: Text;
-        contentType: Text;
-        fileMetadata: FileMetadata;
-        uploadTime: Time.Time;
-        status: Text;
-    };
-
-    type FileMetadata = {
-        id: Text;
-        fileName: Text;
-        fileSize: Nat;
-        uploadTime: Time.Time;
-        fileType: Text;
-        ipfsHash: ?Text;
-        storageLocation: Text;
-    };
-
-    type CreatorStatus = {
-        vibeLevel: Text;
-        streakCount: Nat;
-        totalUploads: Nat;
-        lastUploadTimestamp: Time.Time;
-        tribe: [Principal];
-        lastActive: Time.Time;
-        contentScore: Nat;
-    };
-
-    type UserRole = {
-        #Learner;
-        #PeerTeacher;
-        #Mentor;
-    };
-
-    type RolePrivileges = {
-        role: UserRole;
-        level: Nat;
-        rights: [Text];
-        maxDailyPosts: Nat;
-        sknsEarned: Nat;
-    };
-
-    type Achievement = {
-        id: Text;
-        name: Text;
-        description: Text;
-        icon: Text;
-        xpThreshold: Nat;
-        tokenReward: Nat;
-        badgeType: Text;
-        nftReward: ?Text;
-        unlocked: Bool;
-        unlockedTimestamp: ?Time.Time;
-        roleUpgrade: ?UserRole;
-    };
-
-    type AchievementShare = {
-        id: Text;
-        userId: Principal;
-        achievementId: Text;
-        sharedTimestamp: Time.Time;
-        publicMessage: ?Text;
-        likes: Nat;
-        comments: [AchievementComment];
-    };
-
-    type AchievementComment = {
-        commentId: Text;
-        userId: Principal;
-        content: Text;
-        timestamp: Time.Time;
-    };
-
-    type ContentEligibility = {
-        canPost: Bool;
-        maxPostsPerDay: Nat;
-        requiredLevel: Nat;
-        features: [Text];
-    };
-
-    type Recommendation = {
-        id: Text;
-        userId: Principal;
-        recommendationType: RecommendationType;
-        score: Float;
-        content: Text;
-        timestamp: Time.Time;
-    };
-
-    type RecommendationType = {
-        #Course;
-        #Mentor;
-        #Content;
-        #Skill;
-    };
-
-    type SkillVisualization = {
-        userId: Principal;
-        overallLevel: Nat;
-        skillRadar: [SkillRadarPoint];
-        progressTrend: [SkillProgressPoint];
-    };
-
-    type SkillRadarPoint = {
-        skill: Text;
-        proficiencyLevel: Text;
-        xpPercentage: Float;
-    };
-
-    type SkillProgressPoint = {
-        timestamp: Time.Time;
-        totalXP: Nat;
-        level: Nat;
-    };
-
-    type Tribe = {
-        id: Text;
-        name: Text;
-        description: Text;
-        members: [Principal];
-        achievements: [Achievement];
-        vibeScore: Nat;
-        createdAt: Time.Time;
-        lastActive: Time.Time;
-    };
-
-    type ShareEvent = {
-        id: Text;
-        achievement: Achievement;
-        sharedBy: Principal;
-        message: Text;
-        reactions: [Reaction];
-        timestamp: Time.Time;
-    };
-
-    type Reaction = {
-        user: Principal;
-        reactionType: Text;
-        timestamp: Time.Time;
-    };
-
-    type Community = {
-        id: Text;
-        name: Text;
-        description: Text;
-        focus: [Text];
-        members: [Principal];
-        content: [Text];
-        metrics: CommunityMetrics;
-        mentorSessions: [Text];
-        approvedMembers: [Principal];
-        createdAt: Time.Time;
-    };
-
-    type CommunityMetrics = {
-        totalMembers: Nat;
-        activeMembers: Nat;
-        contentCount: Nat;
-        engagementRate: Float;
-        totalActions: Nat;
-        lastUpdated: Time.Time;
-    };
-
-    type StudyJam = {
-        id: Text;
-        name: Text;
-        description: Text;
-        participants: [Principal];
-        startTime: Time.Time;
-        endTime: Time.Time;
-        status: Text;
-        learningGoals: [Text];
-    };
-
-    type ContentMood = {
-        id: Text;
-        mood: Text;
-        intensity: Nat;
-        timestamp: Time.Time;
-        tags: [Text];
-    };
-
-    type VibeStatus = {
-        currentMood: Text;
-        energyLevel: Nat;
-        focusScore: Nat;
-        lastUpdate: Time.Time;
-        streakDays: Nat;
-    };
-
-    type NFTData = {
-        id: Text;
-        owner: Principal;
-        metadata: {
-            name: Text;
-            description: Text;
-            image: Text;
-            attributes: [(Text, Text)];
+    // Update user profile function (support dynamic updates)
+    public shared func updateUserProfile(userId: Principal, updatedProfile: UserProfile) : async Result<(), Text> {
+    switch (users.get(userId)) {
+        case (?user) {
+            let updatedUser = User {
+                userId = user.userId;
+                profile = updatedProfile;
+            };
+            users.put(userId, updatedUser);
+            return #ok(());  // Ensure return of #ok when the user is updated
         };
-        mintTime: Time.Time;
-        transferHistory: [(Principal, Time.Time)];
+        case null {
+            return #err("User not found");  // Ensure return of #err when user is not found
+        };
+    }
+};
+
+   // Function to display badges
+public shared func showBadges(userId: Principal) : async Result<[Text], Text> {
+    switch (users.get(userId)) {
+        case (?user) { 
+            return #ok(user.profile.badges);  // Return badges wrapped in Result
+        };
+        case null { 
+            return #err("User not found");  // Return error if user is not found
+        };
+    }
+};
+
+    
+// Function to display certifications
+public shared func showCertifications(userId: Principal) : async Result<[Text], Text> {
+    switch (users.get(userId)) {
+        case (?user) {
+            return #ok(user.profile.certifications); // Return certifications wrapped in Result
+        };
+        case null { 
+            return #err("User not found"); // Return error if user is not found
+        };
+    }
+};
+
+// Function to create mentorship match
+public shared func createMentorshipMatch(mentorId: Principal, menteeId: Principal) : async Result<(), Text> {
+    switch (users.get(mentorId)) {
+        case (?mentor) {
+            switch (users.get(menteeId)) {
+                case (?mentee) {
+                    let matchScore = calculateMatchScore(mentor.profile, mentee.profile);
+                    let newMatch = MentorshipMatch {
+                        mentorId = mentorId;
+                        menteeId = menteeId;
+                        matchScore = matchScore;
+                    };
+
+                    switch (mentorMatches.get(mentorId)) {
+                        case (?matches) {
+                            let updatedMatches = Array.append(matches, [newMatch]);
+                            mentorMatches.put(mentorId, updatedMatches);
+                            return #ok(()); // Successfully added match
+                        };
+                        case null {
+                            mentorMatches.put(mentorId, [newMatch]);
+                            return #ok(()); // Successfully added match as first match for mentor
+                        }
+                    }
+                };
+                case null { 
+                    return #err("Mentee not found"); // Mentee does not exist
+                }
+            }
+        };
+        case null { 
+            return #err("Mentor not found"); // Mentor does not exist
+        }
+    }
+};
+
+    // Function to calculate the match score dynamically based on various factors
+    private func calculateMatchScore(mentor: UserProfile, mentee: UserProfile) : Float {
+        var matchScore: Float = 0.0;
+
+        // Match based on mentorship style
+        matchScore += mentorshipStyleMatch(mentor.preferredMentorshipStyle, mentee.preferredMentorshipStyle);
+
+        // Match based on expertise (overlapping expertise areas)
+        matchScore += expertiseMatch(mentor.expertise, mentee.expertise);
+
+        // Match based on activity level (higher is better)
+        matchScore += activityLevelMatch(mentor.activityLevel, mentee.activityLevel);
+
+        // Match based on experience (years of experience)
+        matchScore += experienceMatch(mentor.experienceYears, mentee.experienceYears);
+
+        return matchScore;
     };
 
-    private stable var usersEntries : [(Principal, User)] = [];
-    private stable var communitiesEntries : [(Text, Community)] = [];
-    private stable var coursesEntries : [(Text, Course)] = [];
-    private stable var projectsEntries : [(Text, Project)] = [];
-    private stable var matchMetricsEntries : [(Text, MatchMetrics)] = [];
-
-    private let users = HashMap.HashMap<Principal, User>(0, Principal.equal, Principal.hash);
-    private let communities = HashMap.HashMap<Text, Community>(0, Text.equal, Text.hash);
-    private let courses = HashMap.HashMap<Text, Course>(0, Text.equal, Text.hash);
-    private let projects = HashMap.HashMap<Text, Project>(0, Text.equal, Text.hash);
-    private let rateLimit = HashMap.HashMap<Text, Time.Time>(100, Text.equal, Text.hash);
-    private let matchMetrics = HashMap.HashMap<Text, MatchMetrics>(0, Text.equal, Text.hash);
-    private let achievements = HashMap.HashMap<Text, Achievement>(0, Text.equal, Text.hash);
-    private let contentUploads = HashMap.HashMap<Text, ContentUpload>(0, Text.equal, Text.hash);
-    private let fileMetadata = HashMap.HashMap<Text, FileMetadata>(0, Text.equal, Text.hash);
-    private let mentorApplications = HashMap.HashMap<Principal, MentorApplication>(0, Principal.equal, Principal.hash);
-    private let mentorMenteePairs = HashMap.HashMap<(Principal, Principal), Bool>(0, tupleEqual, tupleHash);
-    private let studyJams = HashMap.HashMap<Text, StudyJam>(0, Text.equal, Text.hash);
-    private let contentMoods = HashMap.HashMap<Text, ContentMood>(0, Text.equal, Text.hash);
-    private let jamRewards = HashMap.HashMap<Principal, [Text]>(0, Principal.equal, Principal.hash);
-    private let userVibes = HashMap.HashMap<Principal, UserVibe>(0, Principal.equal, Principal.hash);
-    private let userStreaks = HashMap.HashMap<Principal, Nat>(0, Principal.equal, Principal.hash);
-    private let recommendations = HashMap.HashMap<Text, Recommendation>(0, Text.equal, Text.hash);
-
-    private func tupleEqual((p1, p2): (Principal, Principal), (p3, p4): (Principal, Principal)) : Bool {
-        Principal.equal(p1, p3) and Principal.equal(p2, p4)
-    };
-
-    private func tupleHash((p1, p2): (Principal, Principal)) : Nat {
-        Principal.hash(p1) + Principal.hash(p2)
-    };
-
-    private func getUserOrFail(userId: Principal) : Result.Result<User, Text> {
-        switch (users.get(userId)) {
-            case (?user) { #ok(user) };
-            case null { #err("User not found") };
+    // Mentorship style match calculation
+    private func mentorshipStyleMatch(mentorStyle: MentorshipStyle, menteeStyle: MentorshipStyle) : Float {
+        switch (mentorStyle, menteeStyle) {
+            case (#HandsOn, #HandsOn) { return 25.0 };
+            case (#Guided, #Guided) { return 20.0 };
+            case (#Strategic, #Strategic) { return 15.0 };
+            case (#Technical, #Technical) { return 25.0 };
+            case (#Other, #Other) { return 15.0 };
+            case (_, _) { return 5.0 };
         }
     };
 
-    public shared(msg) func createUser(profile: UserProfile) : async Result.Result<Text, Text> {
-        switch (users.get(msg.caller)) {
-            case (?_) { #err("User already exists") };
-            case null {
-                let newUser : User = {
-                    userId = msg.caller;
-                    skills = [];
-                    completedCourses = [];
-                    tokens = 0;
-                    nfts = [];
-                    mentor = false;
-                    experience_years = 0;
-                    rating = 0.0;
-                    availability = [];
-                    timezone = "UTC";
-                    profile = profile;
-                    verificationStatus = "pending";
-                    lastActive = Time.now();
-                    achievements = [];
-                    xp = 0;
-                    skillLevel = { level = 1; title = "Beginner" };
-                    vibeStatus = {
-                        currentMood = "Neutral";
-                        energyLevel = 0;
-                        focusScore = 0;
-                        lastUpdate = Time.now();
-                                                streakDays = 0;
-                    };
-                    contentScore = 0;
-                    tribe = [];
-                };
-                users.put(msg.caller, newUser);
-                #ok("User created successfully");
-            };
+    // Expertise match calculation
+    private func expertiseMatch(mentorExpertise: [Text], menteeExpertise: [Text]) : Float {
+        let commonExpertise = Array.filter(mentorExpertise, func (expertise) {
+            Array.contains(menteeExpertise, expertise)
+        });
+        return Float(Array.size(commonExpertise)) * 10.0; // Each common expertise adds 10 points
+    };
+
+    // Activity level match calculation
+    private func activityLevelMatch(mentorActivity: Float, menteeActivity: Float) : Float {
+        return 100.0 - (abs(mentorActivity - menteeActivity) * 100.0); // Closer activity levels increase match score
+    };
+
+    // Experience match calculation
+    private func experienceMatch(mentorExperience: Float, menteeExperience: Float) : Float {
+        return 100.0 - (abs(mentorExperience - menteeExperience) * 5.0); // Smaller difference increases match score
+    };
+// Recommendation System: Recommends mentors, courses, or activities
+public shared func recommend(userId: Principal) : async Result<Text, Text> {
+    switch (users.get(userId)) {
+        case (?user) {
+            // Example of recommending based on expertise
+            let recommendedMentors = recommendMentors(user.profile.expertise);
+            let recommendedCourses = recommendCourses(user.profile.skills);
+            let recommendedActivities = recommendActivities(user.profile.learningPreferences);
+
+            // Combine recommendations and return as a result
+            let recommendations = "Recommended Mentors: " # Text.join(recommendedMentors, ", ") # "\n" #
+                                  "Recommended Courses: " # Text.join(recommendedCourses, ", ") # "\n" #
+                                  "Recommended Activities: " # Text.join(recommendedActivities, ", ");
+            return #ok(recommendations); // Return wrapped in #ok to fit Result<Text, Text>
+
         };
+        case null {
+            return #err("User not found"); // Return error wrapped in #err
+        }
+    }
+};
+
+    // Example function to recommend mentors based on expertise
+    private func recommendMentors(expertise: [Text]) : [Text] {
+        // In a real scenario, this could be dynamic, querying other users or a database.
+        return Array.map(expertise, func (e) { "Mentor in " # e });
     };
 
-    public shared(msg) func getUser() : async Result.Result<User, Text> {
-        getUserOrFail(msg.caller);
+    // Example function to recommend courses based on skills
+    private func recommendCourses(skills: [Text]) : [Text] {
+        return Array.map(skills, func (s) { "Course for " # s });
     };
 
-    public shared(msg) func whoami() : async Principal {
-        msg.caller;
-    };
-
-    public shared(msg) func verifyUserIdentity(documents: [Text]) : async Result.Result<Text, Text> {
-        switch (getUserOrFail(msg.caller)) {
-            case (#ok(user)) {
-                let updatedUser = {
-                    user with
-                    verificationStatus = "verified";
-                    lastActive = Time.now();
-                };
-                users.put(msg.caller, updatedUser);
-                #ok("User verification completed")
-            };
-            case (#err(e)) { #err(e) };
-        };
-    };
-
-    public shared(msg) func createNewCourse(courseId: Text, title: Text, description: Text, difficulty: Text, tokenReward: Nat, nftReward: Text, modules: [Text]) : async Result.Result<Text, Text> {
-        await Learning.createCourse(courseId, title, description, difficulty, tokenReward, nftReward, modules)
-    };
-
-    public shared(msg) func startCourseEnrollment(courseId: Text) : async Result.Result<Text, Text> {
-        await Learning.enrollInCourse(courseId)
-    };
-
-    public shared(msg) func createTribe(name: Text, description: Text, initialMembers: [Principal]) : async Result.Result<Text, Text> {
-        await Social.createTribe(name, description, initialMembers)
-    };
-
-    public shared(msg) func shareAchievement(achievementId: Text, message: Text) : async Result.Result<Text, Text> {
-        await Social.shareAchievement(achievementId, message)
-    };
-
-    public shared(msg) func findMentor() : async Result.Result<MentorshipMatch, Text> {
-        await Mentorship.findBestMentorMatch()
-    };
-
-    public shared(msg) func getPersonalizedRecommendations() : async [Recommendation] {
-        await Mentorship.generatePersonalizedRecommendations()
-    };
-
-    public shared(msg) func updateUserVibe(vibe: UserVibe) : async Result.Result<Text, Text> {
-        userVibes.put(msg.caller, vibe);
-        #ok("Vibe updated successfully ✨")
-    };
-
-    system func preupgrade() {
-        usersEntries := Iter.toArray(users.entries());
-        communitiesEntries := Iter.toArray(communities.entries());
-        coursesEntries := Iter.toArray(courses.entries());
-        projectsEntries := Iter.toArray(projects.entries());
-        matchMetricsEntries := Iter.toArray(matchMetrics.entries());
-    };
-
-    system func postupgrade() {
-        users := HashMap.fromIter<Principal, User>(usersEntries.vals(), 1, Principal.equal, Principal.hash);
-        communities := HashMap.fromIter<Text, Community>(communitiesEntries.vals(), 1, Text.equal, Text.hash);
-        courses := HashMap.fromIter<Text, Course>(coursesEntries.vals(), 1, Text.equal, Text.hash);
-        projects := HashMap.fromIter<Text, Project>(projectsEntries.vals(), 1, Text.equal, Text.hash);
-        matchMetrics := HashMap.fromIter<Text, MatchMetrics>(matchMetricsEntries.vals(), 1, Text.equal, Text.hash);
+    // Example function to recommend activities based on learning preferences
+    private func recommendActivities(learningPreferences: [Text]) : [Text] {
+        return Array.map(learningPreferences, func (lp) { "Activity for " # lp });
     };
 }
-
-                       
