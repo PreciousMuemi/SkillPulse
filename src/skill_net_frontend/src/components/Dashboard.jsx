@@ -14,6 +14,7 @@ import Header from './Header';
 import { blobToPrincipal } from '../utils/principal';
 import { skill_net_backend } from '../../../declarations/skill_net_backend';
 import ContentUploadComponent  from './content';
+import { useUser } from './UserContext';
 const Dashboard = () => {
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState({
@@ -23,6 +24,8 @@ const Dashboard = () => {
     level: 1
   });
   const [userType, setUserType] = useState('user');
+  const [principal, setPrincipal] = useState(null);
+  const { user, updateUserVibe } = useUser();
   const [mentorApplication, setMentorApplication] = useState(null);
   const [principalId, setPrincipalId] = useState('');
   const [activeTab, setActiveTab] = useState('mentoring');
@@ -54,6 +57,8 @@ const Dashboard = () => {
     { id: 'communities', icon: Hash, label: 'Communities' },
     { id: 'study-jams', icon: Calendar, label: 'Study Jams' },
     { id: 'glowup', icon: Star, label: 'GlowUp' },
+    { id: 'Forums', icon: Star, label: 'Forums' },
+
 
   ];
 
@@ -448,14 +453,14 @@ const Dashboard = () => {
                     <div className="mt-3 flex justify-between items-center">
                       <div className="text-sm text-gray-600">
                         <span className="mr-2">Date: {studyJam.date}</span>
-                        <span className="text-blue-500">{studyJam.spots} spots left</span>
+                        {/* <span className="text-blue-500">{studyJam.spots} spots left</span> */}
                       </div>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className="px-3 py-1 bg-green-50 text-green-600 rounded-full hover:bg-green-100 transition-all"
                       >
-                        Enroll
+                        Join
                       </motion.button>
                     </div>
                   </motion.div>
@@ -467,10 +472,11 @@ const Dashboard = () => {
         <div className="bg-gradient-to-br from-indigo-50 to-purple-50 min-h-screen p-6 rounded-xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Left Column: Profile & Stats */}
+            
             <div className="bg-white shadow-2xl rounded-2xl p-6 border border-gray-100">
               <div className="flex items-center gap-4 mb-6">
                 <img 
-                  src={user.avatar} 
+                  // src=
                   className="w-16 h-16 rounded-full ring-2 ring-indigo-300"
                 />
                 <div>
@@ -538,6 +544,35 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+      {activeTab === 'forums' && (
+  <motion.div 
+    key="forums"
+    initial={{ opacity: 0, y: 50 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: 50 }}
+    className="space-y-4"
+  >
+    <h3 className="text-lg font-semibold">Forums</h3>
+    {forums.map((forum) => (
+      <motion.div 
+        key={forum.id}
+        whileHover={{ scale: 1.03 }}
+        className="bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition-all"
+      >
+        <h4 className="text-md font-medium">{forum.name}</h4>
+        <p className="text-sm text-gray-500 mt-2">{forum.description}</p>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => openForum(forum.id)}
+          className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-all"
+        >
+          View Posts
+        </motion.button>
+      </motion.div>
+    ))}
+  </motion.div>
+)}
 
           
           </AnimatePresence>

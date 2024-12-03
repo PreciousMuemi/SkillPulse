@@ -71,5 +71,25 @@ const api = {
     }
   },
 };
+const fetchStudyJams = async () => {
+  const jams = await backendActor.getAllStudyJams();
+  setStudyJams(jams);
+};
+
+const joinStudyJam = async (jamId) => {
+  const result = await backendActor.joinStudyJam(currentUser.principal, jamId);
+  if (result) alert("Joined Study Jam!");
+};
+
+const fetchForums = async () => {
+  const forums = await backendActor.getAllForums();
+  setForums(forums);
+};
+
+const openForum = async (forumId) => {
+  const posts = await backendActor.getForumPosts(forumId);
+  setCurrentForumPosts(posts);
+};
+
 
 export default api;
