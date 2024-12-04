@@ -37,7 +37,12 @@ const api = {
 
   requestMentorMatch: async (menteeId, skills) => {
     try {
-      return await skillnetActor.requestMentorMatch({ menteeId, skills });
+      const result = await skillnetActor.requestMentorMatch(menteeId, skills);
+      if ('Ok' in result) {
+        return result.Ok;  // Successfully found mentors
+      } else {
+        throw new Error(result.Err);  // Error in finding mentors
+      }
     } catch (error) {
       console.error('Error fetching mentor matches:', error.message);
       throw new Error('Failed to fetch mentor matches.');

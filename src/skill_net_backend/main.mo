@@ -337,6 +337,39 @@ actor MentorshipPlatform {
 
         #ok(newMatch)
     };
+    public func requestMentorMatch(menteeId: Principal, skills: Text,  availability: Text, mentorshipStyle: Text, location: Text) : async Result<Text, Text> {
+    let mentors = await getMentorsBasedOnFilters(skills,  availability, mentorshipStyle, location);
+    
+    switch (mentors) {
+      case null {
+         return #err("No mentors found based on the selected filters.");
+        };
+
+        case (?mentorList) {
+            // Let successMessage = "Mentors matched successfully.";
+            return #ok("Mentors matched successfully.");
+        
+            };
+    };
+  };
+
+  // Filter mentors based on the provided criteria
+  private func getMentorsBasedOnFilters(skills: Text, availability: Text, mentorshipStyle: Text, location: Text) : async ?[Text] {
+    // Placeholder mentor list for demonstration
+    let filteredMentors : [Text]= [
+      "Mentor1 - Skill: #{skills}, Style: #{mentorshipStyle}, Location: #{location}",
+      "Mentor2 - Skill: #{skills}, Style: #{mentorshipStyle}, Location: #{location}"
+    ];
+    
+    // Filter logic can be implemented to match mentors based on the criteria
+     if (filteredMentors.size() > 0) {
+      return ?filteredMentors;
+    };
+    
+    return null;
+    
+  };
+
 
     // Recommendation System
     public shared query func recommendMentors(
@@ -952,4 +985,4 @@ private func updateUserTokens(userId: Principal, amount: Nat) {
         "ipfs://" # Nat.toText(hashValue)
     };
 
-}
+};

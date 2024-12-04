@@ -21,8 +21,16 @@ import AchievementsPanel from './components/AchievementsPanel';
 import JobMarket from './components/jobMarket';
 import ErrorBoundary from './components/ErrorBoundary';
 
+import UserRegistrationFlow from './components/login';
+import StudyJamForm from './components/JamForm';
+import TribeCreationForm from './components/TribeForm';
+import CreateForumForm from './components/ForumForm';
+import MentorshipMatchForm from './components/MForm';
+import NotificationSetupForm from './components/NotificationForm';
+
 // Import UserProvider
 import { UserProvider } from './components/UserContext';
+import UserInterestsForm from './components/skilsform';
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authClient, setAuthClient] = useState(null);
@@ -85,7 +93,14 @@ function App() {
             <Route path="/nft-gallery" element={isAuthenticated ? (<NFTGallery backendActor={backendActor} isWalletConnected={isWalletConnected} />) : (<Navigate to="/" />)} />
             <Route path="/achievements" element={isAuthenticated ? (<AchievementsPanel backendActor={backendActor} isWalletConnected={isWalletConnected} />) : (<Navigate to="/" />)} />
             <Route path="/jobs" element={isAuthenticated ? (<JobMarket backendActor={backendActor} isWalletConnected={isWalletConnected} />) : (<Navigate to="/" />)} />
-          </Routes>
+            <Route path="/login" element={<UserRegistrationFlow />} />
+            <Route path="/study-jam" element={<StudyJamForm />} />
+            <Route path="/tribe" element={<TribeCreationForm />} />
+            <Route path="/forum" element={<CreateForumForm />} />
+            <Route path="/mentorship" element={<MentorshipMatchForm />} />
+            <Route path="/notifications" element={<NotificationSetupForm />} />
+            <Route path="/skills" element={<UserInterestsForm/>}/>   
+           </Routes>
           {/* <Footer /> */}
         </div>
       </Router>
