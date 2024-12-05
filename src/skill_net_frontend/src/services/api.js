@@ -4,7 +4,7 @@ import { idlFactory as skillnetIdlFactory } from '../../../declarations/skill_ne
 const agent = new HttpAgent();
 const skillnetActor = Actor.createActor(skillnetIdlFactory, {
   agent,
-  canisterId: process.env.CANISTER_ID || 'your-default-canister-id',
+  canisterId: 'bw4dl-smaaa-aaaaa-qaacq-cai',
 });
 
 const api = {

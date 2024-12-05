@@ -3,7 +3,7 @@ import { Upload, XCircle, CheckCircle, Star, TrendingUp } from 'lucide-react';
 import { skill_net_backend } from '../../../declarations/skill_net_backend';
 
 const ContentCreation = () => {
-  const { user, checkEligibility } = useUser();
+  const { user, checkEligibility } = useState();
   const [eligibility, setEligibility] = useState(null);
 
   const contentTypes = {
@@ -55,7 +55,7 @@ const ContentCreation = () => {
             Level up to unlock more content powers! 🎯
           </p>
           <p className="text-sm text-purple-400 mt-2">
-            Next unlock at level {user.vibeStatus.level + 1}
+            Next unlock at level +1
           </p>
         </div>
       )}

@@ -57,9 +57,12 @@ const Dashboard = () => {
     { id: 'communities', icon: Hash, label: 'Communities' },
     { id: 'study-jams', icon: Calendar, label: 'Study Jams' },
     { id: 'glowup', icon: Star, label: 'GlowUp' },
-    { id: 'Forums', icon: Star, label: 'Forums' },
+    { id: 'forums', icon: Star, label: 'Forums' },
+  ];
 
-
+  const forums = [
+    { id: 'js-forum', name: 'JavaScript Forum', description: 'A forum for learing Js.' },
+    { id: 'react-forum', name: 'React Forum', description: 'A forum for learning react.' },
   ];
 
   const addNotification = useCallback((message, type = 'info') => {
@@ -375,25 +378,25 @@ const Dashboard = () => {
               </motion.div>
             )}
 
-{activeTab === 'courses' && (
-  <div className="space-y-6">
-    <h2 className="text-2xl font-semibold text-gray-800">Courses</h2>
-    <ul className="space-y-4">
-      {courses.map(course => (
-        <li key={course.id} className="border bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-200 ease-in-out">
-          <h3 className="text-xl font-semibold text-indigo-600">{course.name}</h3>
-          <p className="text-gray-600 mt-2">{course.description}</p>
-          <p className="text-sm text-gray-500 mt-2">Participants: {course.participants}</p>
-          <div className="mt-4">
-            <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors duration-200">
-              View Details
-            </button>
-          </div>
-        </li>
-      ))}
-    </ul>
-  </div>
-)}
+          {activeTab === 'courses' && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-semibold text-gray-800">Courses</h2>
+              <ul className="space-y-4">
+                {courses.map(course => (
+                  <li key={course.id} className="border bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-200 ease-in-out">
+                    <h3 className="text-xl font-semibold text-indigo-600">{course.name}</h3>
+                    <p className="text-gray-600 mt-2">{course.description}</p>
+                    <p className="text-sm text-gray-500 mt-2">Participants: {course.participants}</p>
+                    <div className="mt-4">
+                      <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors duration-200">
+                        View Details
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
             {activeTab === 'communities' && (
               <motion.div 
@@ -480,18 +483,18 @@ const Dashboard = () => {
                   className="w-16 h-16 rounded-full ring-2 ring-indigo-300"
                 />
                 <div>
-                  <h3 className="font-bold text-xl">@{user.username}</h3>
+                  <h3 className="font-bold text-xl">@ Username</h3>
                   <span className="text-sm bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full">
-                    {user.role} • Lvl {user.level}
+                    role • Lv X
                   </span>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3 mb-6">
                 {[
-                  {label: '🔥 Streak', value: user.streak},
-                  {label: '⭐ Posts', value: user.posts},
-                  {label: '💫 Rating', value: user.rating}
+                  {label: '🔥 Streak', value: 23},
+                  {label: '⭐ Posts', value: 11},
+                  {label: '💫 Rating', value: 2.3}
                 ].map(stat => (
                   <div key={stat.label} className="bg-gradient-to-br from-indigo-50 to-purple-50 p-3 rounded-xl text-center">
                     <p className="text-sm font-medium">{stat.label}</p>
@@ -525,10 +528,10 @@ const Dashboard = () => {
                   <h4 className="font-medium text-indigo-700 mb-2">Today's Posts</h4>
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-bold text-indigo-600">
-                      {user.dailyPosts}
+                      43
                     </span>
                     <span className="text-sm text-indigo-500">
-                      /{user.maxDailyPosts} available
+                      /55 available
                     </span>
                   </div>
                 </div>
@@ -536,7 +539,7 @@ const Dashboard = () => {
                 <div className="bg-purple-50 rounded-xl p-4">
                   <h4 className="font-medium text-purple-700 mb-2">Next Unlock</h4>
                   <p className="text-sm text-purple-600">
-                    {user.nextUnlock}
+                    200
                   </p>
                 </div>
               </div>
@@ -545,34 +548,34 @@ const Dashboard = () => {
         </div>
       )}
       {activeTab === 'forums' && (
-  <motion.div 
-    key="forums"
-    initial={{ opacity: 0, y: 50 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: 50 }}
-    className="space-y-4"
-  >
-    <h3 className="text-lg font-semibold">Forums</h3>
-    {forums.map((forum) => (
       <motion.div 
-        key={forum.id}
-        whileHover={{ scale: 1.03 }}
-        className="bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition-all"
+        key="forums"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 50 }}
+        className="space-y-4"
       >
-        <h4 className="text-md font-medium">{forum.name}</h4>
-        <p className="text-sm text-gray-500 mt-2">{forum.description}</p>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => openForum(forum.id)}
-          className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-all"
-        >
-          View Posts
-        </motion.button>
+        <h3 className="text-lg font-semibold">Forums</h3>
+        {forums.map((forum) => (
+          <motion.div 
+            key={forum.id}
+            whileHover={{ scale: 1.03 }}
+            className="bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition-all"
+          >
+            <h4 className="text-md font-medium">{forum.name}</h4>
+            <p className="text-sm text-gray-500 mt-2">{forum.description}</p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => openForum(forum.id)}
+              className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-all"
+            >
+              View Posts
+            </motion.button>
+          </motion.div>
+        ))}
       </motion.div>
-    ))}
-  </motion.div>
-)}
+    )}
 
           
           </AnimatePresence>
