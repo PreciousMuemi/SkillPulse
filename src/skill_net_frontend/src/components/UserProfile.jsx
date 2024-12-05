@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 // import { useUser } from '../context/UserContext'; // Assuming you have a UserContext
+import api from '../services/api';
 
 const UserProfile = () => {
-  const { user, updateUserVibe } = useUser();
+  const { uservibe, updateUserVibe } = useState();
   const [contentStats, setContentStats] = useState({
     posts: [],
     engagement: 0,
     streak: 0
   });
+
+  const user = api.getUser();
+  console.log("User: ", user);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
