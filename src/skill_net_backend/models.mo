@@ -1,15 +1,8 @@
 import Principal "mo:base/Principal";
-import HashMap "mo:base/HashMap";
 import Time "mo:base/Time";
 import Text "mo:base/Text";
-import Result "mo:base/Result";
-import Buffer "mo:base/Buffer";
-import Array "mo:base/Array";
-import Nat "mo:base/Nat";
 import Float "mo:base/Float";
-import Iter "mo:base/Iter";
-import Debug "mo:base/Debug";
-import Hash "mo:base/Hash";
+import Nat "mo:base/Nat";
 
 // Separate models into their own module for better organization
 module {
@@ -145,17 +138,34 @@ module {
     };
 
     // Skill with proficiency level
-    public type Skill = {
-        name: Text;
-        proficiencyLevel: SkillLevel;
-    };
+  
+public type Skill = {
+    name: Text;                          // The name of the skill (e.g., "JavaScript").
+    proficiencyLevel: SkillLevel;        // The proficiency level of the skill.
+    lastUsed: Time.Time;                 // The last time this skill was used.
+    category: ?SkillCategory;            // Optional category for the skill (e.g., Technical, Soft).
+    endorsements: Nat;                    // Number of endorsements for this skill.
+    certifications: [Certification];      // List of certifications related to this skill.
+};
 
-    public type SkillLevel = {
-        #Beginner;
-        #Intermediate;
-        #Advanced;
-        #Expert;
-    };
+// Skill Level Definition
+public type SkillLevel = {
+    #Beginner;                           // Represents a beginner level of proficiency.
+    #Intermediate;                       // Represents an intermediate level of proficiency.
+    #Advanced;                           // Represents an advanced level of proficiency.
+    #Expert;                             // Represents an expert level of proficiency.
+};
+
+// Skill Category Definition
+public type SkillCategory = {
+    #Technical;                          // Technical skills (e.g., programming languages).
+    #Soft;                               // Soft skills (e.g., communication, teamwork).
+    #Leadership;                         // Leadership skills (e.g., project management).
+    #Creative;                           // Creative skills (e.g., design, writing).
+};
+
+
+
 
     // More detailed expertise tracking
     public type Expertise = {

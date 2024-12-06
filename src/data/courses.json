@@ -1,0 +1,146 @@
+{
+    "categories": [
+      {
+        "name": "Tech & Programming",
+        "courses": [
+          {
+            "id": "web_dev_intro",
+            "name": "Introduction to Web Development",
+            "level": "Beginner",
+            "totalXP": 300,
+            "project": {
+              "name": "Personal Portfolio Website",
+              "description": "Create a simple personal portfolio showcasing your web development skills",
+              "requiredSkills": ["HTML", "CSS", "Basic JavaScript"]
+            },
+            "modules": [
+              {
+                "id": "html_css_basics",
+                "name": "Basics of HTML & CSS",
+                "content": "Learn the fundamental building blocks of web pages",
+                "xpPoints": 100,
+                "isUnlocked": true,
+                "prerequisites": [],
+                "videoContent": "https://example.com/html-css-basics",
+                "quizzes": [
+                  {
+                    "name": "HTML Structure Quiz",
+                    "totalQuestions": 10,
+                    "passingScore": 7
+                  }
+                ],
+                "resources": [
+                  "MDN Web Docs HTML Guide",
+                  "CSS Fundamentals Cheatsheet"
+                ]
+              },
+              {
+                "id": "javascript_intro",
+                "name": "Introduction to JavaScript",
+                "content": "Learn basic programming concepts and JavaScript syntax",
+                "xpPoints": 100,
+                "isUnlocked": false,
+                "prerequisites": ["html_css_basics"],
+                "videoContent": "https://example.com/javascript-intro",
+                "quizzes": [
+                  {
+                    "name": "JavaScript Basics Quiz",
+                    "totalQuestions": 10,
+                    "passingScore": 7
+                  }
+                ],
+                "resources": [
+                  "JavaScript.info Tutorial",
+                  "Eloquent JavaScript Book"
+                ]
+              },
+              {
+                "id": "first_webpage",
+                "name": "Creating Your First Webpage",
+                "content": "Combine HTML, CSS, and JavaScript to build an interactive webpage",
+                "xpPoints": 100,
+                "isUnlocked": false,
+                "prerequisites": ["html_css_basics", "javascript_intro"],
+                "projectDetails": {
+                  "description": "Build a responsive landing page with interactive elements",
+                  "reviewCriteria": [
+                    "Proper HTML structure",
+                    "Responsive CSS design",
+                    "Basic JavaScript interactivity"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "react_framework",
+            "name": "Frontend Frameworks (React.js)",
+            "level": "Intermediate",
+            "totalXP": 400,
+            "project": {
+              "name": "Interactive Dashboard",
+              "description": "Build a React-based dashboard with data visualization",
+              "requiredSkills": ["React Components", "State Management", "API Integration"]
+            },
+            "modules": [
+              {
+                "id": "react_basics",
+                "name": "React Basics and Components",
+                "content": "Understand React component architecture",
+                "xpPoints": 133,
+                "isUnlocked": true,
+                "prerequisites": [],
+                "videoContent": "https://example.com/react-basics",
+                "quizzes": [
+                  {
+                    "name": "React Components Quiz",
+                    "totalQuestions": 10,
+                    "passingScore": 7
+                  }
+                ]
+              },
+              {
+                "id": "state_management",
+                "name": "State Management with Hooks",
+                "content": "Learn advanced state management techniques",
+                "xpPoints": 133,
+                "isUnlocked": false,
+                "prerequisites": ["react_basics"],
+                "videoContent": "https://example.com/react-hooks"
+              },
+              {
+                "id": "interactive_apps",
+                "name": "Building Interactive Apps",
+                "content": "Create complex, interactive React applications",
+                "xpPoints": 134,
+                "isUnlocked": false,
+                "prerequisites": ["react_basics", "state_management"]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "incentiveSystem": {
+      "xpMultiplier": 1.5,
+      "tokenRewards": {
+        "moduleCompletion": 1,
+        "courseCompletion": 1,
+        "projectSubmission": 100
+      },
+      "achievementBadges": [
+        "Beginner Learner",
+        "Intermediate Developer",
+        "Course Completionist"
+      ]
+    },
+    "peerReviewSystem": {
+      "reviewCredits": 5,
+      "reviewThreshold": 3,
+      "qualityScoring": {
+        "helpfulness": 0.4,
+        "clarity": 0.3,
+        "constructiveness": 0.3
+      }
+    }
+  }

@@ -8,13 +8,18 @@ import MentorDiscovery from './MentorDiscovery';
 import 'react-toastify/dist/ReactToastify.css';
 import Logo from './skillnet.jpg';
 import MentorQualificationSystem from './MentorQualification';
+import CourseExplorer from './Realcourse'
 // import MentorProgram from './MentorProgram';
 import MentorRequestForm from './MentorRequestForm';
 import Header from './Header';
-import { blobToPrincipal } from '../utils/principal';
 import { skill_net_backend } from '../../../declarations/skill_net_backend';
 import ContentUploadComponent  from './content';
 import { useUser } from './UserContext';
+
+import { Principal } from '@dfinity/principal';
+import ForumForm from './ForumForm';
+
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState({
@@ -24,8 +29,8 @@ const Dashboard = () => {
     level: 1
   });
   const [userType, setUserType] = useState('user');
-  const [principal, setPrincipal] = useState(null);
-  const { user, updateUserVibe } = useUser();
+  const [princ, setPrinc] = useState(null);
+  const { user } = useUser();
   const [mentorApplication, setMentorApplication] = useState(null);
   const [principalId, setPrincipalId] = useState('');
   const [activeTab, setActiveTab] = useState('mentoring');
@@ -34,22 +39,24 @@ const Dashboard = () => {
   const [mentorMatch, setMentorMatch] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
+  const [forums, setForums] = useState([]);
+  const [showForumForm, setShowForumForm] = useState(false);
 
 
-  const courses = [
-    { id: 'js-course', name: 'JavaScript for Beginners', description: 'A comprehensive course to learn JavaScript from scratch.', participants: 320 },
-    { id: 'react-course', name: 'Mastering React', description: 'An advanced course for mastering React and building real-world applications.', participants: 220 }
-  ];
+  // const courses = [
+  //   { id: 'js-course', name: 'JavaScript for Beginners', description: 'A comprehensive course to learn JavaScript from scratch.', participants: 320 },
+  //   { id: 'react-course', name: 'Mastering React', description: 'An advanced course for mastering React and building real-world applications.', participants: 220 }
+  // ];
   
-  const communities = [
-    { id: 'js-community', name: 'JavaScript Enthusiasts', description: 'A community for JavaScript learners and experts.', members: 1240 },
-    { id: 'react-community', name: 'React Developers', description: 'A community for ReactJS enthusiasts to share knowledge and tips.', members: 980 }
-  ];
+  // const communities = [
+  //   { id: 'js-community', name: 'JavaScript Enthusiasts', description: 'A community for JavaScript learners and experts.', members: 1240 },
+  //   { id: 'react-community', name: 'React Developers', description: 'A community for ReactJS enthusiasts to share knowledge and tips.', members: 980 }
+  // ];
 
-  const studyJams = [
-    { id: 'js-study-jam', name: 'JavaScript Study Jam', date: '2024-12-10', description: 'Join this study jam to improve your JS skills with peers.', spots: 15 },
-    { id: 'react-study-jam', name: 'React Study Jam', date: '2024-12-12', description: 'Join this study jam to deepen your understanding of React.', spots: 20 }
-  ];
+  // const studyJams = [
+  //   { id: 'js-study-jam', name: 'JavaScript Study Jam', date: '2024-12-10', description: 'Join this study jam to improve your JS skills with peers.', spots: 15 },
+  //   { id: 'react-study-jam', name: 'React Study Jam', date: '2024-12-12', description: 'Join this study jam to deepen your understanding of React.', spots: 20 }
+  // ];
 
   const sidebarTabs = [
     { id: 'mentoring', icon: Users, label: 'Mentoring' },
@@ -90,6 +97,18 @@ const Dashboard = () => {
     }
   };
 
+  // Helper function to convert Uint8Array to string
+  const blobToPrincipal = (blob) => {
+    // Convert array to Uint8Array
+    const uint8Array = new Uint8Array(blob);
+  
+    // Decode as Principal
+    const principal = Principal.fromUint8Array(uint8Array);
+    
+    // Convert Principal to text format
+    return principal.toText();
+  }
+
   // Update the error handling in fetchUserProfile
   const fetchUserProfile = async () => {
     try {
@@ -99,10 +118,15 @@ const Dashboard = () => {
       }
 
       const principalBlob = await skill_net_backend.whoami();
-      const principalId = blobToPrincipal(principalBlob);
+      console.log("Principal ID: ", principalBlob);
+
+      const principalId = blobToPrincipal(principalBlob._arr);
+      console.log("Principal Blob: ", principalId);
+
       setPrincipalId(principalId);
 
-      const userResult = await skill_net_backend.getUser();
+      const userResult = await skill_net_backend.getUserEntries();
+      console.log("User Data:",  userResult);
       
       if ('ok' in userResult && userResult.ok) {
         const userInfo = userResult.ok;
@@ -112,46 +136,42 @@ const Dashboard = () => {
           walletBalance: Number(userInfo.tokens) || 0,
           level: Math.floor((Number(userInfo.tokens) || 0) / 1000) + 1
         });
-        toast.success('Profile loaded successfully');
       } else {
         logError(new Error('Invalid user data received'), 'User Profile Fetch');
       }
     } catch (error) {
       logError(error, 'User Profile Fetch');
-      toast.error('Failed to load profile');
     } finally {
       setLoading(false);
-    }
-  };
-  const handleMentorApplication = async () => {
-    try {
-      const mentorApplication = {
-        userId: principalId,
-        submissionDate: Date.now(),
-        qualifications: [],
-        specializations: [],
-        testScores: [],
-        status: "pending"
-      };
-  
-      const response = await skill_net_backend.applyForMentor(mentorApplication);
-      
-      if ('ok' in response) {
-        setMentorApplication({ status: 'pending' });
-        addNotification('Mentor application submitted successfully', 'success');
-      } else {
-        console.error('Mentor application failed:', response.err);
-        addNotification('Failed to submit mentor application', 'error');
-      }
-    } catch (error) {
-      console.error('Error applying for mentor:', error);
-      addNotification('Error during mentor application', 'error');
     }
   };
 
   const handleLogout = () => {
     addNotification('Logging out...', 'info');
     navigate('/login');
+  };
+
+  useEffect(() => {
+    const fetchForums = async () => {
+      try {
+        const fetchedForums = await api.listForums();
+        setForums(fetchedForums);
+      } catch (error) {
+        console.error('Error fetching forums:', error);
+      }
+    };
+    fetchForums();
+  }, []);
+
+  // Handler for creating a new forum
+  const handleCreateForum = async (forumData) => {
+    try {
+      const newForum = await api.createForum(forumData);
+      setForums([...forums, newForum]);
+      setShowForumForm(false);
+    } catch (error) {
+      console.error('Error creating forum:', error);
+    }
   };
 
   const renderNotifications = () => (
@@ -218,6 +238,7 @@ const Dashboard = () => {
         pauseOnHover
       />
       {renderNotifications()}
+
       
       {/* Sidebar */}
       <motion.div 
@@ -289,7 +310,7 @@ const Dashboard = () => {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold text-gray-900 flex items-center">
                   <Star className="mr-2 text-yellow-500" />
-                  Your Progress
+                  {principalId}'s Progress
                 </h2>
                 <div className="flex items-center">
                   <Activity className="mr-2 text-green-500" />
@@ -375,25 +396,11 @@ const Dashboard = () => {
               </motion.div>
             )}
 
-{activeTab === 'courses' && (
-  <div className="space-y-6">
-    <h2 className="text-2xl font-semibold text-gray-800">Courses</h2>
-    <ul className="space-y-4">
-      {courses.map(course => (
-        <li key={course.id} className="border bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-200 ease-in-out">
-          <h3 className="text-xl font-semibold text-indigo-600">{course.name}</h3>
-          <p className="text-gray-600 mt-2">{course.description}</p>
-          <p className="text-sm text-gray-500 mt-2">Participants: {course.participants}</p>
-          <div className="mt-4">
-            <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors duration-200">
-              View Details
-            </button>
-          </div>
-        </li>
-      ))}
-    </ul>
-  </div>
-)}
+              {activeTab === 'courses' && (
+                <div className="space-y-6">
+                  <CourseExplorer/>
+                </div>
+              )}
 
             {activeTab === 'communities' && (
               <motion.div 
@@ -511,7 +518,7 @@ const Dashboard = () => {
               </div>
 
               <ContentUploadComponent
-                onUploadSuccess={(uploadedContent) => {
+                onUploadSuccess={() => {
                   toast.success('Content Uploaded Successfully!', {
                     position: "top-right",
                     duration: 3000
@@ -544,36 +551,57 @@ const Dashboard = () => {
           </div>
         </div>
       )}
-      {activeTab === 'forums' && (
-  <motion.div 
-    key="forums"
-    initial={{ opacity: 0, y: 50 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: 50 }}
-    className="space-y-4"
-  >
-    <h3 className="text-lg font-semibold">Forums</h3>
-    {forums.map((forum) => (
+    {activeTab === 'forums' && (
       <motion.div 
-        key={forum.id}
-        whileHover={{ scale: 1.03 }}
-        className="bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition-all"
-      >
-        <h4 className="text-md font-medium">{forum.name}</h4>
-        <p className="text-sm text-gray-500 mt-2">{forum.description}</p>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => openForum(forum.id)}
-          className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-all"
+        key="forums"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 50 }}
+        className="space-y-4"
+      > 
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Forums</h2>
+        <button 
+          onClick={() => setShowForumForm(true)}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
         >
-          View Posts
-        </motion.button>
-      </motion.div>
-    ))}
-  </motion.div>
-)}
+          Create New Forum
+        </button>
+        </div>
+      </div>
 
+      {/* Forum List */}
+      <div className="grid md:grid-cols-3 gap-4">
+        {forums.map(forum => (
+          <div 
+            key={forum.id} 
+            className="bg-white p-4 rounded-lg shadow hover:shadow-md transition"
+          >
+            <h3 className="text-lg font-semibold">{forum.name}</h3>
+            <p className="text-gray-600">{forum.description}</p>
+            <button 
+              className="mt-2 bg-blue-50 text-blue-600 px-3 py-1 rounded"
+            >
+              View Forum
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Forum Creation Modal */}
+      {showForumForm && (
+        <ForumForm 
+          onSubmit={handleCreateForum}
+          onClose={() => setShowForumForm(false)}
+        />
+    
+      )}
+      </motion.div>
+    )}
+    
+   
+ 
           
           </AnimatePresence>
 
@@ -618,20 +646,6 @@ const Dashboard = () => {
     </motion.div>
   );
 };
-class DashboardErrorBoundary extends React.Component {
-  state = { hasError: false };
-  
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return <div className="error-container">Something went wrong. Please refresh.</div>;
-    }
-    return this.props.children;
-  }
-}
 
 
 export default Dashboard;
